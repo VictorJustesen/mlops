@@ -1,4 +1,22 @@
 mlops
+
+
+<h1>
+Project description</h1>
+
+<h3>
+The goal of the project is to predict the electrity price, for different electricity markets based on their electricy generation and use
+</h3>
+
+<h3>
+We are going to get the data from the well cited paper https://www.sciencedirect.com/science/article/pii/S0306261921004529?via%3Dihub that propeses open access benchmark datasets for day ahead forecasting
+</h3>
+
+<h3>
+We expect to use a range of model.
+XGBoost is a classic, Some classic NN models, maybe some state of the art models(Mamba, Xlstm), maybe some classical statistical models
+</h3>
+
 ==============================
 
 time series project for mlops
