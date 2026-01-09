@@ -9,3 +9,4 @@ xgboost
 scikit-learn
 hydra-core
 python-dotenv
+uv

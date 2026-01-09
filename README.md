@@ -61,7 +61,7 @@ Project Organization
 to start run the following commands
 </h1>
 <p>
-conda create -n <conda name> python=3.10
+conda create -n <conda name> python=3.13
 </p>
 
 <p>
