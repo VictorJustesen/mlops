@@ -1,5 +1,3 @@
-mlops
-
 
 <h1>
 Project description</h1>
@@ -13,13 +11,9 @@ We are going to get the data from the well cited paper https://www.sciencedirect
 </h3>
 
 <h3>
-We expect to use a range of model.
-XGBoost is a classic, Some classic NN models, maybe some state of the art models(Mamba, Xlstm), maybe some classical statistical models
+We expect to use a range of models.
+XGBoost is a classic, some classic NN models, maybe some state of the art models (Mamba, Xlstm), maybe some classical statistical models
 </h3>
-
-==============================
-
-time series project for mlops
 
 Project Organization
 ------------
