@@ -3,16 +3,19 @@
 Project description</h1>
 
 <h3>
-The goal of the project is to predict the electrity price, for different electricity markets based on their electricy generation and use
+The primary objective of this project is to develop and evaluate robust predictive models for electricity price forecasting across distinct power markets. As energy grids increasingly integrate variable renewable energy sources, the volatility of electricity prices has risen, making accurate day-ahead forecasting essential for grid operators and market participants. We aim to model the complex interactions between the exegenous features: electricity generation, the electricity demand load and some autoregressive patterns .
+</h3>
+
+
+<h3>
+To ensure the reliability and reproducibility of our results, we will utilize the open access benchmark datasets proposed in the widely cited literature on day-ahead forecasting found in (https://www.sciencedirect.com/science/article/pii/S0306261921004529?via%3Dihub). This source provides high quality, standardized data that facilitates a rigorous comparison of different forecasting methodologies against established metrics. By leveraging these verified benchmarks, we ensure that our performance evaluations are consistent with current academic standards and allow for direct comparison with existing studies in the field.
 </h3>
 
 <h3>
-We are going to get the data from the well cited paper https://www.sciencedirect.com/science/article/pii/S0306261921004529?via%3Dihub that propeses open access benchmark datasets for day ahead forecasting
+Our methodological approach is designed to cover a comprehensive spectrum of predictive techniques, moving from established baselines to experimental deep learning architectures. We will initially employ classical statistical models to capture the fundamental seasonal and linear trends inherent in the time-series data. Building upon this, we will implement XGBoost, a gradient boosting framework that serves as a strong industry standard for regression tasks due to its ability to handle feature interactions effectively.
 </h3>
-
 <h3>
-We expect to use a range of models.
-XGBoost is a classic, some classic NN models, maybe some state of the art models (Mamba, Xlstm), maybe some classical statistical models
+Beyond traditional machine learning, we will investigate the efficacy of deep learning approaches. This includes implementing classic neural network architectures to capture high-dimensional non-linear dependencies. Maybe we will include some state-of-the-art models like Mamba and xLSTM. Of course most of the work is going to be in the MLops aspect of the course. 
 </h3>
 
 Project Organization
