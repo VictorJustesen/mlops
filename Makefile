@@ -109,7 +109,7 @@ pre-commit-update:
 fix:
 	uv run ruff format .
 	uv run ruff check --fix .
-	uv run pre-commit run --all-files
+#uv run pre-commit run --all-files
 
 
 #################################################################################

@@ -21,9 +21,8 @@ dependencies = [
     "pytest-cov>=6.0.0",
     "isort>=5.13.0",
     "ruff>=0.8.0",
-    "pre-commit>=4.0.0",
 ]
-
+# "pre-commit = 4.0.0"
 
 
 [tool.uv.sources]
