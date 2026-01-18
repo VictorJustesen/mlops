@@ -1,4 +1,4 @@
-.PHONY: clean data lint requirements sync_data_to_s3 sync_data_from_s3 test test_coverage
+.PHONY: clean data lint requirements sync_data_to_s3 sync_data_from_s3 test test_coverage pre-commit-install pre-commit-run pre-commit-update
 
 #################################################################################
 # GLOBALS                                                                       #
@@ -82,14 +82,30 @@ test:
 test_coverage:
 	pytest tests/ -v --cov=src --cov-report=html
 
+## Format code with ruff
 format:
-	uv run black src/
-	uv run isort src/
+	uv run ruff format src/ tests/
+	uv run ruff check --fix src/ tests/
 
+## Lint code with ruff
 lint_all:
-	uv run ruff check src/
-	uv run black --check src/
-	uv run isort --check-only src/
+	uv run ruff check src/ tests/
+	uv run ruff format --check src/ tests/
+
+check: lint_all test_coverage
+
+## Install pre-commit hooks
+pre-commit-install:
+	uv run pre-commit install
+
+## Run pre-commit on all files
+pre-commit-run:
+	uv run pre-commit run --all-files
+
+## Update pre-commit hooks
+pre-commit-update:
+	uv run pre-commit autoupdate
+
 #################################################################################
 # PROJECT RULES                                                                 #
 #################################################################################

@@ -6,24 +6,38 @@ antlr4-python3-runtime==4.9.3
     #   omegaconf
 certifi==2026.1.4
     # via requests
+cfgv==3.5.0
+    # via pre-commit
 charset-normalizer==3.4.4
     # via requests
 click==8.3.1
     # via typer
 contourpy==1.3.3
     # via matplotlib
+coverage==7.13.1
+    # via pytest-cov
 cycler==0.12.1
     # via matplotlib
+distlib==0.4.0
+    # via virtualenv
 filelock==3.20.2
-    # via torch
+    # via
+    #   torch
+    #   virtualenv
 fonttools==4.61.1
     # via matplotlib
 fsspec==2025.12.0
     # via torch
 hydra-core==1.3.2
     # via mlops (pyproject.toml)
+identify==2.6.16
+    # via pre-commit
 idna==3.11
     # via requests
+iniconfig==2.3.0
+    # via pytest
+isort==7.0.0
+    # via mlops (pyproject.toml)
 jinja2==3.1.6
     # via torch
 joblib==1.5.3
@@ -42,6 +56,8 @@ mpmath==1.3.0
     # via sympy
 networkx==3.6.1
     # via torch
+nodeenv==1.10.0
+    # via pre-commit
 numpy==2.4.0
     # via
     #   mlops (pyproject.toml)
@@ -58,16 +74,33 @@ packaging==25.0
     # via
     #   hydra-core
     #   matplotlib
+    #   pytest
 pandas==2.3.3
     # via mlops (pyproject.toml)
 pillow==12.1.0
     # via
     #   matplotlib
     #   torchvision
+platformdirs==4.5.1
+    # via virtualenv
+pluggy==1.6.0
+    # via
+    #   pytest
+    #   pytest-cov
+pre-commit==4.5.1
+    # via mlops (pyproject.toml)
 pygments==2.19.2
-    # via rich
+    # via
+    #   pytest
+    #   rich
 pyparsing==3.3.1
     # via matplotlib
+pytest==9.0.2
+    # via
+    #   mlops (pyproject.toml)
+    #   pytest-cov
+pytest-cov==7.0.0
+    # via mlops (pyproject.toml)
 python-dateutil==2.9.0.post0
     # via
     #   matplotlib
@@ -77,11 +110,15 @@ python-dotenv==1.2.1
 pytz==2025.2
     # via pandas
 pyyaml==6.0.3
-    # via omegaconf
+    # via
+    #   omegaconf
+    #   pre-commit
 requests==2.32.5
     # via mlops (pyproject.toml)
 rich==14.2.0
     # via typer
+ruff==0.14.13
+    # via mlops (pyproject.toml)
 scikit-learn==1.8.0
     # via mlops (pyproject.toml)
 scipy==1.16.3
@@ -116,5 +153,7 @@ urllib3==2.6.3
     # via requests
 uv==0.9.22
     # via mlops (pyproject.toml)
+virtualenv==20.36.1
+    # via pre-commit
 xgboost==3.1.2
     # via mlops (pyproject.toml)

@@ -1,5 +1,4 @@
 # PyTorch RNN models for time series forecasting
-import torch
 import torch.nn as nn
 
 

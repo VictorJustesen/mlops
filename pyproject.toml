@@ -19,9 +19,9 @@ dependencies = [
         "matplotlib>=3.10.0",
     "pytest>=8.0.0",
     "pytest-cov>=6.0.0",
-    "black>=24.0.0",
     "isort>=5.13.0",
     "ruff>=0.8.0",
+    "pre-commit>=4.0.0",
 ]
 
 
@@ -53,5 +53,12 @@ line_length = 100
 
 [tool.ruff]
 line-length = 100
-select = ["E", "F", "W"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
 ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"

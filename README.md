@@ -15,7 +15,7 @@ To ensure the reliability and reproducibility of our results, we will utilize th
 Our methodological approach is designed to cover a comprehensive spectrum of predictive techniques, moving from established baselines to experimental deep learning architectures. We will initially employ classical statistical models to capture the fundamental seasonal and linear trends inherent in the time-series data. Building upon this, we will implement XGBoost, a gradient boosting framework that serves as a strong industry standard for regression tasks due to its ability to handle feature interactions effectively.
 </h3>
 <h3>
-Beyond traditional machine learning, we will investigate the efficacy of deep learning approaches. This includes implementing classic neural network architectures to capture high-dimensional non-linear dependencies. Maybe we will include some state-of-the-art models like Mamba and xLSTM. Of course most of the work is going to be in the MLops aspect of the course. 
+Beyond traditional machine learning, we will investigate the efficacy of deep learning approaches. This includes implementing classic neural network architectures to capture high-dimensional non-linear dependencies. Maybe we will include some state-of-the-art models like Mamba and xLSTM. Of course most of the work is going to be in the MLops aspect of the course.
 </h3>
 
 Project Organization

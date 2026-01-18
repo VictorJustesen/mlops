@@ -2,7 +2,6 @@ import shutil
 import tempfile
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 import pytest
 
@@ -91,6 +90,6 @@ def test_time_series_output_has_correct_columns(temp_data_dirs, sample_csv):
 
     # Check for standardized column names
     expected_columns = ["Date", "Price", "Load", "Production"]
-    assert (
-        list(train_df.columns) == expected_columns
-    ), f"Expected columns {expected_columns}, got {list(train_df.columns)}"
+    assert list(train_df.columns) == expected_columns, (
+        f"Expected columns {expected_columns}, got {list(train_df.columns)}"
+    )
