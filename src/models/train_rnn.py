@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
-from rnn import PriceLSTM, PriceGRU
+from .rnn import PriceLSTM, PriceGRU
 import hydra
 from omegaconf import DictConfig, OmegaConf
 
