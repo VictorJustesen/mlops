@@ -55,7 +55,7 @@ def test_time_series_split_creates_files(temp_data_dirs, sample_csv):
     time_series_split_save(input_dir=str(input_dir), output_dir=str(output_dir))
 
     # Check that train and test files were created
-    train_file = output_dir /"BE_train.csv"
+    train_file = output_dir / "BE_train.csv"
     test_file = output_dir / "BE_test.csv"
     test_file = output_dir / "BE_test.csv"
 
