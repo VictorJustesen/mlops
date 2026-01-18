@@ -22,8 +22,12 @@ endif
 
 ## Install Python Dependencies
 requirements: test_environment
-	$(PYTHON_INTERPRETER) -m pip install -U pip setuptools wheel
-	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
+	@if command -v uv > /dev/null; then \
+		uv sync; \
+	else \
+		$(PYTHON_INTERPRETER) -m pip install -U pip setuptools wheel; \
+		$(PYTHON_INTERPRETER) -m pip install -r requirements.txt; \
+	fi
 
 ## Make Dataset
 data: requirements
