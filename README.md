@@ -74,7 +74,7 @@ Project Organization
 TODO update this.</h1>
 
 <h1>
-to start run the following commands
+To start run the following commands
 </h1>
 <p>
 conda create -n <conda name> python=3.13
