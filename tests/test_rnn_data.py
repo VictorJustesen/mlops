@@ -57,6 +57,7 @@ def test_time_series_split_creates_files(temp_data_dirs, sample_csv):
     # Check that train and test files were created
     train_file = output_dir / "BE_train.csv"
     test_file = output_dir / "BE_test.csv"
+    test_file = output_dir / "BE_test.csv"
 
     assert train_file.exists(), "Train file was not created"
     assert test_file.exists(), "Test file was not created"
