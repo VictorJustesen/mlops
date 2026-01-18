@@ -7,7 +7,7 @@ from src.models.rnn import PriceGRU
 # Constants matching your training config
 INPUT_SIZE = 3  # Price, Load, Production
 HIDDEN_SIZE = 64
-NUM_LAYERS = 1
+NUM_LAYERS = 2  # Change from 1 to 2 to match trained model
 MODEL_PATH = "model_gru_DE.pth" 
 DEVICE = torch.device("cpu")
 
