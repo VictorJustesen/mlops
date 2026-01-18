@@ -5,8 +5,10 @@ import pandas as pd
 import torch
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, Dataset
-
-from .rnn import PriceGRU, PriceLSTM
+import sys
+import os
+sys.path.append(os.getcwd())
+from src.models.rnn import PriceGRU, PriceLSTM
 
 DEVICE = torch.device(
     "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
@@ -68,8 +70,9 @@ def train(cfg: DictConfig):
     input_features = cfg.get("input_features", DEFAULT_INPUT_FEATURES)
 
     # Prepare data loaders
-    train_csv = f"data/grouped/{cfg.region}_train.csv"
-    test_csv = f"data/grouped/{cfg.region}_test.csv"
+    root_dir = hydra.utils.get_original_cwd()
+    train_csv = os.path.join(root_dir, "src/data/grouped", f"{cfg.region}_train.csv")
+    test_csv = os.path.join(root_dir, "src/data/grouped", f"{cfg.region}_test.csv")
     train_set = SequenceDataset(train_csv, window_size=window_size, input_features=input_features)
     test_set = SequenceDataset(test_csv, window_size=window_size, input_features=input_features)
     train_loader = DataLoader(train_set, batch_size=cfg.batch_size, shuffle=True)
