@@ -82,6 +82,14 @@ test:
 test_coverage:
 	pytest tests/ -v --cov=src --cov-report=html
 
+format:
+	uv run black src/
+	uv run isort src/
+
+lint_all:
+	uv run ruff check src/
+	uv run black --check src/
+	uv run isort --check-only src/
 #################################################################################
 # PROJECT RULES                                                                 #
 #################################################################################

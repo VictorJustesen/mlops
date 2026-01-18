@@ -1,14 +1,16 @@
-import torch
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from torch.utils.data import Dataset, DataLoader
-from .rnn import PriceLSTM, PriceGRU
 import hydra
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import torch
 from omegaconf import DictConfig, OmegaConf
+from torch.utils.data import DataLoader, Dataset
 
+from .rnn import PriceGRU, PriceLSTM
 
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
+DEVICE = torch.device(
+    "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+)
 
 DEFAULT_WINDOW_SIZE = 168  # 1 week in hours
 DEFAULT_INPUT_FEATURES = ["Price", "Load", "Production"]
@@ -45,10 +47,9 @@ class SequenceDataset(Dataset):
         Returns:
             tuple: (input_sequence, target_value)
         """
-        x = self.data[idx:idx + self.window_size]
+        x = self.data[idx : idx + self.window_size]
         y = self.targets[idx + self.window_size]
         return torch.tensor(x), torch.tensor(y)
-
 
 
 @hydra.main(version_base=None, config_path=".", config_name="rnn_config.yaml")
@@ -77,16 +78,12 @@ def train(cfg: DictConfig):
     # Model selection
     if cfg.model_type.lower() == "lstm":
         model = PriceLSTM(
-            input_size=len(input_features),
-            hidden_size=cfg.hidden_size,
-            num_layers=cfg.num_layers
+            input_size=len(input_features), hidden_size=cfg.hidden_size, num_layers=cfg.num_layers
         ).to(DEVICE)
         model_name = "lstm"
     elif cfg.model_type.lower() == "gru":
         model = PriceGRU(
-            input_size=len(input_features),
-            hidden_size=cfg.hidden_size,
-            num_layers=cfg.num_layers
+            input_size=len(input_features), hidden_size=cfg.hidden_size, num_layers=cfg.num_layers
         ).to(DEVICE)
         model_name = "gru"
     else:
@@ -115,7 +112,7 @@ def train(cfg: DictConfig):
             total_train_samples += batch_size
             if i % 100 == 0:
                 print(f"Epoch {epoch}, iter {i}, loss: {loss.item()}")
-        avg_loss = epoch_loss / total_train_samples if total_train_samples > 0 else float('nan')
+        avg_loss = epoch_loss / total_train_samples if total_train_samples > 0 else float("nan")
         statistics["train_loss"].append(avg_loss)
 
         # Test set evaluation
@@ -131,7 +128,7 @@ def train(cfg: DictConfig):
                 batch_size = x.size(0)
                 test_loss += loss.item() * batch_size
                 total_test_samples += batch_size
-        avg_test_loss = test_loss / total_test_samples if total_test_samples > 0 else float('nan')
+        avg_test_loss = test_loss / total_test_samples if total_test_samples > 0 else float("nan")
         statistics["test_loss"].append(avg_test_loss)
         print(f"Epoch {epoch} avg loss: {avg_loss:.6f} | test loss: {avg_test_loss:.6f}")
         model.train()
@@ -151,7 +148,5 @@ def train(cfg: DictConfig):
     plt.savefig(f"training_statistics_{model_name}_{cfg.region}.png")
 
 
-
 if __name__ == "__main__":
     train()
-

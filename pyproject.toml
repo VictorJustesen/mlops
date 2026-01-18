@@ -19,6 +19,9 @@ dependencies = [
         "matplotlib>=3.10.0",
     "pytest>=8.0.0",
     "pytest-cov>=6.0.0",
+    "black>=24.0.0",
+    "isort>=5.13.0",
+    "ruff>=0.8.0",
 ]
 
 
@@ -40,3 +43,15 @@ explicit = true
 make_data = "src.data.make_dataset:main"
 train_rnn = "src.models.train_rnn:train"
 rnn_data = "src.features.rnn_data:main"
+
+[tool.black]
+line-length = 100
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "W"]
+ignore = ["E501"]
