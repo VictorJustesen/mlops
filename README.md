@@ -70,7 +70,8 @@ Project Organization
 --------
 
 <p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
-
+<h1>
+TODO update this.</h1>
 
 <h1>
 to start run the following commands
@@ -94,4 +95,18 @@ run src/data/make_dataset
 
 <p>
 run src/models/train_model
+</p>
+
+<h1>
+docker guide
+</h1>
+
+<p>
+from root docker build -t mlops-train .
+</p>
+<p>
+docker run mlops-train
+</p>
+<p>
+with parrams docker run mlops-train python src/models/train_rnn.py model_type=gru region=DE epochs=5
 </p>
