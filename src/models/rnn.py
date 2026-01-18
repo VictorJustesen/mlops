@@ -55,6 +55,7 @@ class PriceGRU(nn.Module):
         """
         Forward pass for GRU.
 
+
         Args:
                 x (Tensor): Input tensor of shape (batch_size, seq_len, input_size)
 

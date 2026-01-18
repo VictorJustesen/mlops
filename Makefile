@@ -106,6 +106,12 @@ pre-commit-run:
 pre-commit-update:
 	uv run pre-commit autoupdate
 
+fix:
+	uv run ruff format .
+	uv run ruff check --fix .
+	uv run pre-commit run --all-files
+
+
 #################################################################################
 # PROJECT RULES                                                                 #
 #################################################################################
