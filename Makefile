@@ -107,7 +107,7 @@ lint_all:
 	uv run ruff check src/ tests/
 	uv run ruff format --check src/ tests/
 
-check: lint_all test_coverage
+check: pre-commit-run lint_all test_coverage
 
 ## Install pre-commit hooks
 pre-commit-install:
