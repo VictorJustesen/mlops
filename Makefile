@@ -5,11 +5,18 @@
 #################################################################################
 
 PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-BUCKET = [OPTIONAL] your-bucket-for-syncing-data (do not include 's3://')
-PROFILE = default
 PROJECT_NAME = mlops
 PYTHON_INTERPRETER = python3
-GCP_BUCKET = mlops-dataset-84636
+GCP_BUCKET ?= mlops-dataset-84636
+PROJECT_ID ?= dtumlops-484812
+REGION ?= europe-west1
+TAG ?= latest
+IMAGE_API = gcr.io/$(PROJECT_ID)/rnn-api
+IMAGE_TRAINER = gcr.io/$(PROJECT_ID)/rnn-trainer
+
+# Platform detection - use native for local, amd64 for cloud
+LOCAL_PLATFORM := $(shell uname -m | sed 's/x86_64/linux\/amd64/' | sed 's/arm64/linux\/arm64/' | sed 's/aarch64/linux\/arm64/')
+CLOUD_PLATFORM := linux/amd64
 
 ifeq (,$(shell which conda))
 HAS_CONDA=False
@@ -33,6 +40,7 @@ requirements: test_environment
 ## Make Dataset
 data: requirements
 	$(PYTHON_INTERPRETER) src/data/make_dataset.py data/raw data/processed
+	$(PYTHON_INTERPRETER) src/features/rnn_data.py
 
 ## Delete all compiled Python files
 clean:
@@ -42,22 +50,6 @@ clean:
 ## Lint using flake8
 lint:
 	flake8 src
-
-## Upload Data to S3
-sync_data_to_s3:
-ifeq (default,$(PROFILE))
-	aws s3 sync data/ s3://$(BUCKET)/data/
-else
-	aws s3 sync data/ s3://$(BUCKET)/data/ --profile $(PROFILE)
-endif
-
-## Download Data from S3
-sync_data_from_s3:
-ifeq (default,$(PROFILE))
-	aws s3 sync s3://$(BUCKET)/data/ data/
-else
-	aws s3 sync s3://$(BUCKET)/data/ data/ --profile $(PROFILE)
-endif
 
 ## Initialize DVC and configure GCP remote
 dvc-init:
@@ -138,6 +130,71 @@ fix:
 #################################################################################
 # PROJECT RULES                                                                 #
 #################################################################################
+
+#################################################################################
+# LOCAL WORKFLOW - Build, Train, Deploy Locally                               #
+#################################################################################
+
+## Build images for local development
+build-local:
+	docker build -t $(IMAGE_TRAINER):local --target trainer --platform $(LOCAL_PLATFORM) .
+	docker build -t $(IMAGE_API):local --target api --platform $(LOCAL_PLATFORM) .
+
+## Train model locally in container (saves to ./models/)
+train-local: build-local
+	docker run --rm \
+		-v $(PWD)/models:/app/models \
+		-v $(PWD)/data:/app/data \
+		$(IMAGE_TRAINER):local
+
+## Deploy API locally (uses local models/ folder)
+deploy-local: build-local
+	docker run --rm -p 8080:8080 \
+		-v $(PWD)/models:/app/models \
+		-e MODEL_SOURCE=local \
+		$(IMAGE_API):local
+
+#################################################################################
+# CLOUD WORKFLOW - Build, Train, Deploy on GCP                                #
+#################################################################################
+
+## Build images for cloud deployment and push to GCR
+build-cloud:
+	docker build -t $(IMAGE_TRAINER):$(TAG) --target trainer --platform $(CLOUD_PLATFORM) .
+	docker build -t $(IMAGE_API):$(TAG) --target api --platform $(CLOUD_PLATFORM) .
+	docker tag $(IMAGE_TRAINER):$(TAG) $(IMAGE_TRAINER):latest
+	docker tag $(IMAGE_API):$(TAG) $(IMAGE_API):latest
+	docker push $(IMAGE_TRAINER):$(TAG)
+	docker push $(IMAGE_TRAINER):latest
+	docker push $(IMAGE_API):$(TAG)
+	docker push $(IMAGE_API):latest
+
+## Train model on Vertex AI
+train-cloud: build-cloud
+	gsutil -m rsync -r data/grouped gs://$(GCP_BUCKET)/data/grouped
+	gcloud ai custom-jobs create \
+		--region=$(REGION) \
+		--display-name=rnn-train-$(shell date +%Y%m%d-%H%M%S) \
+		--config=vertex_config.yaml
+
+## Deploy API to Cloud Run
+deploy-cloud:
+	gcloud run deploy rnn-api \
+		--image=$(IMAGE_API):$(TAG) \
+		--region=$(REGION) \
+		--platform=managed \
+		--allow-unauthenticated \
+		--memory=2Gi \
+		--set-env-vars=MODEL_SOURCE=gcs,GCS_MODEL_BUCKET=$(GCP_BUCKET),GCS_MODEL_PATH=models
+
+## Get deployed API URL
+get-api-url:
+	@gcloud run services describe rnn-api --region=$(REGION) --format='value(status.url)'
+
+## Download trained model from GCS to local
+download-model:
+	gsutil -m cp "gs://$(GCP_BUCKET)/models/model_*.pth" models/
+	@echo "Downloaded models from GCS to local models/ directory."
 
 
 

@@ -9,7 +9,10 @@ def test_read_root():
     """Test the root endpoint returns 200 and correct message."""
     response = client.get("/")
     assert response.status_code == 200
-    assert response.json() == {"message": "Electricity Price Forecasting API"}
+    assert response.json() == {
+        "message": "Electricity Price Forecasting API",
+        "model": "No model loaded",
+    }
 
 
 def test_predict_endpoint_structure():

@@ -1,22 +1,13 @@
 
-<h1>
-Project description</h1>
+# Project description
 
-<h3>
 The primary objective of this project is to develop and evaluate robust predictive models for electricity price forecasting across distinct power markets. As energy grids increasingly integrate variable renewable energy sources, the volatility of electricity prices has risen, making accurate day-ahead forecasting essential for grid operators and market participants. We aim to model the complex interactions between the exegenous features: electricity generation, the electricity demand load and some autoregressive patterns .
-</h3>
 
-
-<h3>
 To ensure the reliability and reproducibility of our results, we will utilize the open access benchmark datasets proposed in the widely cited literature on day-ahead forecasting found in (https://www.sciencedirect.com/science/article/pii/S0306261921004529?via%3Dihub). This source provides high quality, standardized data that facilitates a rigorous comparison of different forecasting methodologies against established metrics. By leveraging these verified benchmarks, we ensure that our performance evaluations are consistent with current academic standards and allow for direct comparison with existing studies in the field.
-</h3>
 
-<h3>
 Our methodological approach is designed to cover a comprehensive spectrum of predictive techniques, moving from established baselines to experimental deep learning architectures. We will initially employ classical statistical models to capture the fundamental seasonal and linear trends inherent in the time-series data. Building upon this, we will implement XGBoost, a gradient boosting framework that serves as a strong industry standard for regression tasks due to its ability to handle feature interactions effectively.
-</h3>
-<h3>
+
 Beyond traditional machine learning, we will investigate the efficacy of deep learning approaches. This includes implementing classic neural network architectures to capture high-dimensional non-linear dependencies. Maybe we will include some state-of-the-art models like Mamba and xLSTM. Of course most of the work is going to be in the MLops aspect of the course.
-</h3>
 
 Project Organization
 ------------
@@ -70,46 +61,66 @@ Project Organization
 --------
 
 <p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
-<h1>
-TODO update this.</h1>
 
-<h1>
-To start run the following commands
-</h1>
-<p>
-conda create -n <conda name> python=3.13
-</p>
+## To start run the following commands (or see Makefile for more options):
 
-<p>
-conda activate <conda name>
+1. **Create and activate environment:**
+   ```bash
+   make create_environment
+   source .venv/bin/activate  # or conda activate mlops
+   ```
 
-</p>
+2. **Install dependencies:**
+   ```bash
+   make requirements
+   ```
 
-<p>
-pip install -r requirements.txt
-</p>
+3. **Process data:**
+   ```bash
+   make data
+   ```
 
-<p>
-run src/data/make_dataset
-</p>
+## Workflows
 
-<p>
-run src/models/train_model
-</p>
+### Local Workflow
 
-<h1>
-docker guide
-</h1>
+Local development cycle on your machine:
 
-<p>
-from root docker build -t mlops-train .
-</p>
-<p>
-docker run mlops-train
-</p>
-<p>
-with parrams docker run mlops-train python src/models/train_rnn.py model_type=gru region=DE epochs=5
-</p>
+```bash
+# 1. Build images (native architecture)
+make build-local
+
+# 2. Train model
+make train-local
+
+# 3. Deploy API locally
+make deploy-local
+```
+
+The API will be available at `http://localhost:8080`
+
+### Cloud Workflow
+
+Cloud deployment on GCP:
+
+```bash
+# 1. Build and push images
+make build-cloud
+
+# 2. Train model on Vertex AI
+make train-cloud
+
+# 3. Deploy API to Cloud Run
+make deploy-cloud
+
+# 4. Get API URL
+make get-api-url
+```
+
+Download trained model from cloud to local:
+```bash
+make download-model
+```
 
 
 # GCP
@@ -123,7 +134,12 @@ gcloud auth application-default login
 gcloud config set project <your-project-id>
 ```
 
-2. **Create GCP bucket** (if not exists)
+2. **Configure Docker for GCP Artifact Registry**
+```bash
+gcloud auth configure-docker gcr.io
+```
+
+3. **Create GCP bucket**
 ```bash
 gcloud storage buckets create gs://mlops-dataset-84636 \
   --location=europe-west4 \
@@ -133,7 +149,7 @@ gcloud storage buckets create gs://mlops-dataset-84636 \
 gcloud storage buckets update gs://mlops-dataset-84636 --versioning
 ```
 
-3. **Initialize DVC with GCP remote**
+4. **Initialize DVC with GCP remote**
 ```bash
 make dvc-init
 ```
@@ -152,7 +168,5 @@ make dvc-push
 
 ```bash
 dvc add data/raw/newfile.csv
-git add data/raw/newfile.csv.dvc .gitignore
-git commit -m "Track newfile.csv with DVC"
 make dvc-push
 ```

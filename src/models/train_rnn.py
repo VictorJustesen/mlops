@@ -12,6 +12,14 @@ from torch.utils.data import DataLoader, Dataset
 sys.path.append(os.getcwd())
 from src.models.rnn import PriceGRU, PriceLSTM
 
+# Optional GCS support
+try:
+    from google.cloud import storage
+
+    HAS_GCS = True
+except ImportError:
+    HAS_GCS = False
+
 DEVICE = torch.device(
     "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 )
@@ -71,10 +79,19 @@ def train(cfg: DictConfig):
     window_size = cfg.get("window_size", DEFAULT_WINDOW_SIZE)
     input_features = cfg.get("input_features", DEFAULT_INPUT_FEATURES)
 
-    # Prepare data loaders
-    root_dir = hydra.utils.get_original_cwd()
-    train_csv = os.path.join(root_dir, "data/grouped", f"{cfg.region}_train.csv")
-    test_csv = os.path.join(root_dir, "data/grouped", f"{cfg.region}_test.csv")
+    # Prepare data paths
+    data_path = cfg.get("data_path", "data/grouped")
+    if not os.path.isabs(data_path):
+        root_dir = hydra.utils.get_original_cwd()
+        data_path = os.path.join(root_dir, data_path)
+
+    print(f"Loading data from: {data_path}")
+    train_csv = os.path.join(data_path, f"{cfg.region}_train.csv")
+    test_csv = os.path.join(data_path, f"{cfg.region}_test.csv")
+
+    if not os.path.exists(train_csv):
+        raise FileNotFoundError(f"Training data not found at {train_csv}")
+
     train_set = SequenceDataset(train_csv, window_size=window_size, input_features=input_features)
     test_set = SequenceDataset(test_csv, window_size=window_size, input_features=input_features)
     train_loader = DataLoader(train_set, batch_size=cfg.batch_size, shuffle=True)
@@ -145,6 +162,7 @@ def train(cfg: DictConfig):
     torch.save(model.state_dict(), model_path)
     print(f"Model saved to {model_path}")
 
+    # Save training plot
     plt.figure(figsize=(10, 5))
     plt.plot(statistics["train_loss"], label="Train loss")
     plt.plot(statistics["test_loss"], label="Test loss")
@@ -156,6 +174,32 @@ def train(cfg: DictConfig):
     plot_path = os.path.join(models_dir, f"training_statistics_{model_name}_{cfg.region}.png")
     plt.savefig(plot_path)
     print(f"Training plot saved to {plot_path}")
+
+    # Optional: Upload to GCS if configured
+    gcs_bucket = os.environ.get("GCS_MODEL_BUCKET")
+    gcs_path = os.environ.get("GCS_MODEL_PATH", "models")
+
+    if gcs_bucket and HAS_GCS:
+        try:
+            print(f"Uploading model to GCS: gs://{gcs_bucket}/{gcs_path}/")
+            client = storage.Client()
+            bucket = client.bucket(gcs_bucket)
+
+            # Upload model file
+            blob = bucket.blob(f"{gcs_path}/model_{model_name}_{cfg.region}.pth")
+            blob.upload_from_filename(model_path)
+            print(f"Uploaded {model_path} to gs://{gcs_bucket}/{gcs_path}/")
+
+            # Upload training plot
+            plot_blob = bucket.blob(f"{gcs_path}/training_statistics_{model_name}_{cfg.region}.png")
+            plot_blob.upload_from_filename(plot_path)
+            print(f"Uploaded {plot_path} to gs://{gcs_bucket}/{gcs_path}/")
+        except Exception as e:
+            print(f"Warning: Could not upload to GCS: {e}")
+    elif gcs_bucket and not HAS_GCS:
+        print("Warning: GCS_MODEL_BUCKET set but google-cloud-storage not installed")
+    else:
+        print("GCS upload skipped (GCS_MODEL_BUCKET not set)")
 
 
 if __name__ == "__main__":

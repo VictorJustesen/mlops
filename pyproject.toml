@@ -3,7 +3,7 @@ name = "mlops"
 version = "0.1.0"
 description = "A project where we will be working on machine learning operations"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 dependencies = [
     "hydra-core>=1.3.2",
     "numpy>=2.4.0",
@@ -13,8 +13,8 @@ dependencies = [
     "scikit-learn>=1.8.0",
     "uv>=0.9.22",
     "xgboost>=3.1.2",
-    "torch>=2.1.2",
-    "torchvision>=0.16.2",
+    "torch>=2.5.0",
+    "torchvision>=0.20.0",
     "typer>=0.9.0",
     "matplotlib>=3.10.0",
     "pytest>=8.0.0",
@@ -24,17 +24,20 @@ dependencies = [
     "httpx>=0.27.0",
     "locust>=2.29.0",
     "google-api-python-client>=2.188.0",
+    "google-cloud-storage>=2.10.0",
     "dvc-gs>=3.0.2",
+    "uvicorn>=0.30.0",
+    "fastapi>=0.115.0",
 ]
 # "pre-commit = 4.0.0"
 
 
 [tool.uv.sources]
 torch = [
-    { index = "pytorch-cpu" },
+    { index = "pytorch-cpu", marker = "platform_system != 'Darwin'" },
 ]
 torchvision = [
-    { index = "pytorch-cpu" },
+    { index = "pytorch-cpu", marker = "platform_system != 'Darwin'" },
 ]
 
 [[tool.uv.index]]
@@ -46,6 +49,11 @@ explicit = true
 make_data = "src.data.make_dataset:main"
 train_rnn = "src.models.train_rnn:train"
 rnn_data = "src.features.rnn_data:main"
+
+[tool.uv]
+package = true
+required-environments = ["sys_platform == 'linux' and platform_machine == 'x86_64'"] # For Cloud Build
+
 
 [tool.black]
 line-length = 100

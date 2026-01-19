@@ -1,0 +1,54 @@
+# Cloud Build configuration for building and deploying the API
+# Training should be done separately via Vertex AI
+steps:
+  # Build and push Trainer image
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-trainer'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/rnn-trainer:$BUILD_ID', '-t', 'gcr.io/$PROJECT_ID/rnn-trainer:latest', '--target', 'trainer', '.']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-trainer'
+    args: ['push', 'gcr.io/$PROJECT_ID/rnn-trainer:$BUILD_ID']
+  
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-trainer-latest'
+    args: ['push', 'gcr.io/$PROJECT_ID/rnn-trainer:latest']
+
+  # Build and push API image
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-api'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/rnn-api:$BUILD_ID', '-t', 'gcr.io/$PROJECT_ID/rnn-api:latest', '--target', 'api', '.']
+
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-api'
+    args: ['push', 'gcr.io/$PROJECT_ID/rnn-api:$BUILD_ID']
+  
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-api-latest'
+    args: ['push', 'gcr.io/$PROJECT_ID/rnn-api:latest']
+
+  # Deploy to Cloud Run (downloads model from GCS at startup)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-run'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'rnn-api'
+      - '--image=gcr.io/$PROJECT_ID/rnn-api:$BUILD_ID'
+      - '--region=europe-west1'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--memory=2Gi'
+      - '--set-env-vars=MODEL_SOURCE=gcs,GCS_MODEL_BUCKET=mlops-dataset-84636,GCS_MODEL_PATH=models'
+
+images:
+  - 'gcr.io/$PROJECT_ID/rnn-api:$BUILD_ID'
+  - 'gcr.io/$PROJECT_ID/rnn-api:latest'
+  - 'gcr.io/$PROJECT_ID/rnn-trainer:$BUILD_ID'
+  - 'gcr.io/$PROJECT_ID/rnn-trainer:latest'
+
+
+options:
+  machineType: 'E2_HIGHCPU_8'
