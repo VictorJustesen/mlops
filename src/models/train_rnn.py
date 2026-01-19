@@ -6,9 +6,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
+import wandb
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, Dataset
-import wandb
 
 sys.path.append(os.getcwd())
 from src.models.rnn import PriceGRU, PriceLSTM
