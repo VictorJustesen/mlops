@@ -139,7 +139,9 @@ def train(cfg: DictConfig):
         model.train()
 
     print("Training complete")
-    model_path = f"model_{model_name}_{cfg.region}.pth"
+    models_dir = os.path.join(os.getcwd(), "models")
+    os.makedirs(models_dir, exist_ok=True)
+    model_path = os.path.join(models_dir, f"model_{model_name}_{cfg.region}.pth")
     torch.save(model.state_dict(), model_path)
     print(f"Model saved to {model_path}")
 
@@ -151,7 +153,7 @@ def train(cfg: DictConfig):
     plt.ylabel("Loss")
     plt.legend()
     plt.tight_layout()
-    plot_path = f"training_statistics_{model_name}_{cfg.region}.png"
+    plot_path = os.path.join(models_dir, f"training_statistics_{model_name}_{cfg.region}.png")
     plt.savefig(plot_path)
     print(f"Training plot saved to {plot_path}")
 
