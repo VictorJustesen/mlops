@@ -18,7 +18,7 @@ dependencies = [
     "typer>=0.9.0",
     "matplotlib>=3.10.8",
     "loguru>=0.7.3",
-    "wandb>=0.24.0",,
+    "wandb>=0.24.0",
     "matplotlib>=3.10.0",
     "pytest>=8.0.0",
     "pytest-cov>=6.0.0",
@@ -28,6 +28,7 @@ dependencies = [
     "locust>=2.29.0",
     "google-api-python-client>=2.188.0",
     "dvc-gs>=3.0.2",
+    "markdown>=3.10",
 ]
 # "pre-commit = 4.0.0"
 
@@ -44,6 +45,9 @@ torchvision = [
 name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
 explicit = true
+
+[tool.uv]
+required-environments = ["sys_platform == 'linux' and platform_machine == 'x86_64'"]
 
 [project.scripts]
 make_data = "src.data.make_dataset:main"
