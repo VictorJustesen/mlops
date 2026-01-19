@@ -26,7 +26,7 @@ def train_and_evaluate(dataset_name):
         xgb_config = yaml.safe_load(f)
 
     # Initialize wandb run
-    run = wandb.init(project="mlops", name=f"{dataset_name}_xgb", reinit=True)
+    wandb.init(project="mlops", name=f"{dataset_name}_xgb", reinit=True)
     wandb.config.update(xgb_config)
     wandb.config.update({"dataset": dataset_name})
 
@@ -54,6 +54,7 @@ def train_and_evaluate(dataset_name):
     print(f"Dataset: {dataset_name} | R2: {r2:.4f} | sMAPE: {smape:.2f}%")
 
     wandb.finish()
+
 
 def main():
     datasets = ["NP", "PJM", "BE", "FR", "DE"]
