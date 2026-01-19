@@ -9,7 +9,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     id: 'push-trainer'
     args: ['push', 'gcr.io/$PROJECT_ID/rnn-trainer:$BUILD_ID']
-  
+
   - name: 'gcr.io/cloud-builders/docker'
     id: 'push-trainer-latest'
     args: ['push', 'gcr.io/$PROJECT_ID/rnn-trainer:latest']
@@ -23,7 +23,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     id: 'push-api'
     args: ['push', 'gcr.io/$PROJECT_ID/rnn-api:$BUILD_ID']
-  
+
   - name: 'gcr.io/cloud-builders/docker'
     id: 'push-api-latest'
     args: ['push', 'gcr.io/$PROJECT_ID/rnn-api:latest']

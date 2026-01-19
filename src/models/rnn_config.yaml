@@ -11,4 +11,3 @@ epochs: 3           # Number of training epochs
 hidden_size: 64      # RNN hidden size
 num_layers: 2        # Number of RNN layers
 data_path: "data/grouped" # Path to data directory (can be /gcs/bucket/path)
-

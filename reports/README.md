@@ -134,7 +134,7 @@ Group 57
 >
 > Answer:
 
-s234870, s234868, s225181, s225676, s224276 
+s234870, s234868, s225181, s225676, s224276
 
 ### Question 3
 > **Did you end up using any open-source frameworks/packages not covered in the course during your project? If so**
