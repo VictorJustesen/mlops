@@ -92,10 +92,10 @@ test_environment:
 	$(PYTHON_INTERPRETER) test_environment.py
 
 test:
-	pytest tests/ -v
+	uv run pytest tests/ -v
 
 test_coverage:
-	pytest tests/ -v --cov=src --cov-report=html
+	uv run pytest tests/
 
 ## Format code with ruff
 format:

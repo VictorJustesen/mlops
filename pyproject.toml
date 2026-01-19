@@ -32,8 +32,8 @@ dependencies = [
     "uvicorn>=0.30.0",
     "fastapi>=0.115.0",
     "markdown>=3.10",
+    "pre-commit>=4.0.0",
 ]
-# "pre-commit = 4.0.0"
 
 
 [tool.uv.sources]
