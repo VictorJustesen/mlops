@@ -1,3 +1,6 @@
+import os
+import sys
+
 import hydra
 import matplotlib.pyplot as plt
 import numpy as np
@@ -5,8 +8,7 @@ import pandas as pd
 import torch
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, Dataset
-import sys
-import os
+
 sys.path.append(os.getcwd())
 from src.models.rnn import PriceGRU, PriceLSTM
 
