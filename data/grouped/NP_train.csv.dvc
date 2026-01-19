@@ -1,0 +1,5 @@
+outs:
+- md5: 29eba0b6cb5364e2bf2972f654824635
+  size: 1697562
+  hash: md5
+  path: NP_train.csv
