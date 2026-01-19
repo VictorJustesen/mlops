@@ -3,8 +3,12 @@ import os
 import numpy as np
 import pandas as pd
 import xgboost as xgb
-from sklearn.metrics import r2_score
+import numpy as np
+import os
+import yaml
+import wandb
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score
 
 
 def load_data(filepath):
@@ -18,6 +22,16 @@ def train_and_evaluate(dataset_name):
         print(f"File not found: {file_path}")
         return
 
+    # Load XGBoost config
+    config_path = os.path.join(os.path.dirname(__file__), "xgb_config.yaml")
+    with open(config_path, "r") as f:
+        xgb_config = yaml.safe_load(f)
+
+    # Initialize wandb run
+    run = wandb.init(project="mlops", name=f"{dataset_name}_xgb", reinit=True)
+    wandb.config.update(xgb_config)
+    wandb.config.update({"dataset": dataset_name})
+
     df = load_data(file_path)
     print("data loaded")
     price_col = [col for col in df.columns if "price" in col.lower()][0]
@@ -28,7 +42,7 @@ def train_and_evaluate(dataset_name):
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
 
-    model = xgb.XGBRegressor(n_estimators=100, learning_rate=0.1, max_depth=5, random_state=42)
+    model = xgb.XGBRegressor(**xgb_config)
     model.fit(X_train, y_train)
 
     y_pred = model.predict(X_test)
@@ -36,8 +50,12 @@ def train_and_evaluate(dataset_name):
     smape = 100 * np.mean(2 * np.abs(y_test - y_pred) / (np.abs(y_test) + np.abs(y_pred) + 1e-8))
     r2 = r2_score(y_test, y_pred)
 
+    # Log metrics to wandb
+    wandb.log({"r2": r2, "smape": smape})
+
     print(f"Dataset: {dataset_name} | R2: {r2:.4f} | sMAPE: {smape:.2f}%")
 
+    wandb.finish()
 
 def main():
     datasets = ["NP", "PJM", "BE", "FR", "DE"]

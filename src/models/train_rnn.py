@@ -8,6 +8,7 @@ import pandas as pd
 import torch
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, Dataset
+import wandb
 
 sys.path.append(os.getcwd())
 from src.models.rnn import PriceGRU, PriceLSTM
@@ -67,6 +68,10 @@ def train(cfg: DictConfig):
     """
     print(f"Training {cfg.model_type.upper()} on {cfg.region} grouped data")
     print(OmegaConf.to_yaml(cfg))
+
+    # Initialize wandb run
+    run = wandb.init(project="mlops", name=f"{cfg.model_type}_{cfg.region}_rnn", reinit=True)
+    wandb.config.update(OmegaConf.to_container(cfg, resolve=True))
 
     window_size = cfg.get("window_size", DEFAULT_WINDOW_SIZE)
     input_features = cfg.get("input_features", DEFAULT_INPUT_FEATURES)
@@ -136,10 +141,13 @@ def train(cfg: DictConfig):
         avg_test_loss = test_loss / total_test_samples if total_test_samples > 0 else float("nan")
         statistics["test_loss"].append(avg_test_loss)
         print(f"Epoch {epoch} avg loss: {avg_loss:.6f} | test loss: {avg_test_loss:.6f}")
+        # Log losses to wandb
+        wandb.log({"epoch": epoch, "train_loss": avg_loss, "test_loss": avg_test_loss})
         model.train()
 
     print("Training complete")
     torch.save(model.state_dict(), f"model_{model_name}_{cfg.region}.pth")
+    wandb.finish()
 
     # Plot training and test loss
     plt.figure(figsize=(10, 5))
