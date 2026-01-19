@@ -123,7 +123,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 1 fill here ---
+Group 57
 
 ### Question 2
 > **Enter the study number for each member in the group**
@@ -134,7 +134,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 2 fill here ---
+s234870, s234868, s225181, s225676, s224276 
 
 ### Question 3
 > **Did you end up using any open-source frameworks/packages not covered in the course during your project? If so**
@@ -168,7 +168,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 4 fill here ---
+To guarantee everyone were working with as identical as possible coding environments, we made use of UV. Through a quick installation - Even just using pip - and using basic UV commands, you can be up to date the the current developments. Additionally, UV is also utilized to create new requirement files, making UV a helpful option that speeds up development and helping guaranteeing consistency - Recommended, but only optional.
 
 ### Question 5
 
@@ -184,7 +184,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 5 fill here ---
+Our cookiecutter template has a few changes from the primary cookiecutter template, namely that the SRC contains purely the machine learning model itself. While we might tap back into the model, it is the only major deviation.
 
 ### Question 6
 
@@ -199,7 +199,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 6 fill here ---
+We utilized ruff for linting, pep8 for good coding formatting, and mypy for type checking. Especially in larger projects, it can be important to understand how code works and interacts, especially when a new colleague comes in, or a dusty function has to be updated, so that you don't spend 20 hours thinking "What the ..."
 
 ## Version control
 
@@ -248,7 +248,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 9 fill here ---
+Yes, we started with utilizing branches, and eventually also included pull requests. Branches were agreed upon to be used for new implementations (e.g. module X and Y, or "New Feature"), this meant that if necessary, we could observe what the others were in the middle of, and pull it if necessary, without horizontal interferance.
 
 ### Question 10
 
@@ -299,7 +299,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 12 fill here ---
+We have made use of both hydra config files, which allows us to maintain a 'standard' of how the models use, as well as a simple argparser that can override the hydra configs, together with command line implementation the user can simply write "(Python // uv run) train" to have the model start running. We are currently looking into package installations as well, to reduce it further.
 
 ### Question 13
 
@@ -314,7 +314,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 13 fill here ---
+We primarily utilized config files, which means a lot of standard hyperparameters are kept the same, unless the standard hyperparameters are overwritten. Additionally the hydraconfig files will generate a log file locally, so the user can figure out exactly what configurations were utilized at what date.
 
 ### Question 14
 
