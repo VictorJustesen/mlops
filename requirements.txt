@@ -4,55 +4,173 @@ antlr4-python3-runtime==4.9.3
     # via
     #   hydra-core
     #   omegaconf
+anyio==4.12.1
+    # via httpx
+bidict==0.23.1
+    # via python-socketio
+blinker==1.9.0
+    # via flask
+brotli==1.2.0
+    # via geventhttpclient
 certifi==2026.1.4
-    # via requests
+    # via
+    #   geventhttpclient
+    #   httpcore
+    #   httpx
+    #   requests
 charset-normalizer==3.4.4
     # via requests
+click==8.3.1
+    # via
+    #   flask
+    #   typer
+configargparse==1.7.1
+    # via locust
+contourpy==1.3.3
+    # via matplotlib
+coverage==7.13.1
+    # via pytest-cov
+cycler==0.12.1
+    # via matplotlib
 filelock==3.20.2
     # via torch
+flask==3.1.2
+    # via
+    #   flask-cors
+    #   flask-login
+    #   locust
+flask-cors==6.0.2
+    # via locust
+flask-login==0.6.3
+    # via locust
+fonttools==4.61.1
+    # via matplotlib
 fsspec==2025.12.0
     # via torch
+gevent==25.9.1
+    # via
+    #   geventhttpclient
+    #   locust
+geventhttpclient==2.3.7
+    # via locust
+greenlet==3.3.0
+    # via gevent
+h11==0.16.0
+    # via
+    #   httpcore
+    #   wsproto
+httpcore==1.0.9
+    # via httpx
+httpx==0.28.1
+    # via mlops (pyproject.toml)
 hydra-core==1.3.2
     # via mlops (pyproject.toml)
 idna==3.11
-    # via requests
+    # via
+    #   anyio
+    #   httpx
+    #   requests
+iniconfig==2.3.0
+    # via pytest
+isort==7.0.0
+    # via mlops (pyproject.toml)
+itsdangerous==2.2.0
+    # via flask
 jinja2==3.1.6
-    # via torch
+    # via
+    #   flask
+    #   torch
 joblib==1.5.3
     # via scikit-learn
+kiwisolver==1.4.9
+    # via matplotlib
+locust==2.43.1
+    # via mlops (pyproject.toml)
+markdown-it-py==4.0.0
+    # via rich
 markupsafe==3.0.3
-    # via jinja2
+    # via
+    #   flask
+    #   jinja2
+    #   werkzeug
+matplotlib==3.10.8
+    # via mlops (pyproject.toml)
+mdurl==0.1.2
+    # via markdown-it-py
 mpmath==1.3.0
     # via sympy
+msgpack==1.1.2
+    # via locust
 networkx==3.6.1
     # via torch
 numpy==2.4.0
     # via
     #   mlops (pyproject.toml)
+    #   contourpy
+    #   matplotlib
     #   pandas
     #   scikit-learn
     #   scipy
     #   torchvision
     #   xgboost
-nvidia-nccl-cu12==2.29.2
-    # via xgboost
 omegaconf==2.3.0
     # via hydra-core
 packaging==25.0
-    # via hydra-core
+    # via
+    #   hydra-core
+    #   matplotlib
+    #   pytest
 pandas==2.3.3
     # via mlops (pyproject.toml)
 pillow==12.1.0
-    # via torchvision
+    # via
+    #   matplotlib
+    #   torchvision
+pluggy==1.6.0
+    # via
+    #   pytest
+    #   pytest-cov
+psutil==7.2.1
+    # via locust
+pygments==2.19.2
+    # via
+    #   pytest
+    #   rich
+pyparsing==3.3.1
+    # via matplotlib
+pytest==9.0.2
+    # via
+    #   mlops (pyproject.toml)
+    #   locust
+    #   pytest-cov
+pytest-cov==7.0.0
+    # via mlops (pyproject.toml)
 python-dateutil==2.9.0.post0
-    # via pandas
+    # via
+    #   matplotlib
+    #   pandas
 python-dotenv==1.2.1
     # via mlops (pyproject.toml)
+python-engineio==4.13.0
+    # via
+    #   locust
+    #   python-socketio
+python-socketio==5.16.0
+    # via locust
 pytz==2025.2
     # via pandas
 pyyaml==6.0.3
     # via omegaconf
+pyzmq==27.1.0
+    # via locust
 requests==2.32.5
+    # via
+    #   mlops (pyproject.toml)
+    #   locust
+    #   python-socketio
+rich==14.2.0
+    # via typer
+ruff==0.14.13
     # via mlops (pyproject.toml)
 scikit-learn==1.8.0
     # via mlops (pyproject.toml)
@@ -62,25 +180,49 @@ scipy==1.16.3
     #   xgboost
 setuptools==80.9.0
     # via torch
+shellingham==1.5.4
+    # via typer
+simple-websocket==1.1.0
+    # via python-engineio
 six==1.17.0
     # via python-dateutil
 sympy==1.14.0
     # via torch
 threadpoolctl==3.6.0
     # via scikit-learn
-torch==2.9.1+cpu
+torch==2.9.1
     # via
     #   mlops (pyproject.toml)
     #   torchvision
-torchvision==0.24.1+cpu
+torchvision==0.24.1
+    # via mlops (pyproject.toml)
+typer==0.21.1
     # via mlops (pyproject.toml)
 typing-extensions==4.15.0
-    # via torch
+    # via
+    #   torch
+    #   typer
 tzdata==2025.3
     # via pandas
 urllib3==2.6.3
-    # via requests
+    # via
+    #   geventhttpclient
+    #   requests
 uv==0.9.22
     # via mlops (pyproject.toml)
+websocket-client==1.9.0
+    # via python-socketio
+werkzeug==3.1.5
+    # via
+    #   flask
+    #   flask-cors
+    #   flask-login
+    #   locust
+wsproto==1.3.2
+    # via simple-websocket
 xgboost==3.1.2
     # via mlops (pyproject.toml)
+zope-event==6.1
+    # via gevent
+zope-interface==8.2
+    # via gevent

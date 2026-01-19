@@ -1,7 +1,7 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
-
+*.csv
 # C extensions
 *.so
 
@@ -76,7 +76,11 @@ target/
 .ipynb_checkpoints/
 
 # exclude data from source control by default
-/data/
+# Track DVC files but ignore actual data
+/data/**/*
+!/data/**/*.dvc
+!/data/**/
+!/data/.gitkeep
 
 # Mac OS-specific storage files
 .DS_Store

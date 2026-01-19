@@ -18,11 +18,19 @@ dependencies = [
     "typer>=0.9.0",
     "matplotlib>=3.10.8",
     "loguru>=0.7.3",
-    "wandb>=0.24.0",
+    "wandb>=0.24.0",,
+    "matplotlib>=3.10.0",
+    "pytest>=8.0.0",
+    "pytest-cov>=6.0.0",
+    "isort>=5.13.0",
+    "ruff>=0.8.0",
+    "httpx>=0.27.0",
+    "locust>=2.29.0",
+    "google-api-python-client>=2.188.0",
+    "dvc-gs>=3.0.2",
 ]
+# "pre-commit = 4.0.0"
 
-[tool.uv]
-required-environments = ["sys_platform == 'linux' and platform_machine == 'x86_64'"] # Bjorn wsl setup
 
 [tool.uv.sources]
 torch = [
@@ -41,3 +49,26 @@ explicit = true
 make_data = "src.data.make_dataset:main"
 train_rnn = "src.models.train_rnn:train"
 rnn_data = "src.features.rnn_data:main"
+
+[tool.black]
+line-length = 100
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

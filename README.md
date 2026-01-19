@@ -15,7 +15,7 @@ To ensure the reliability and reproducibility of our results, we will utilize th
 Our methodological approach is designed to cover a comprehensive spectrum of predictive techniques, moving from established baselines to experimental deep learning architectures. We will initially employ classical statistical models to capture the fundamental seasonal and linear trends inherent in the time-series data. Building upon this, we will implement XGBoost, a gradient boosting framework that serves as a strong industry standard for regression tasks due to its ability to handle feature interactions effectively.
 </h3>
 <h3>
-Beyond traditional machine learning, we will investigate the efficacy of deep learning approaches. This includes implementing classic neural network architectures to capture high-dimensional non-linear dependencies. Maybe we will include some state-of-the-art models like Mamba and xLSTM. Of course most of the work is going to be in the MLops aspect of the course. 
+Beyond traditional machine learning, we will investigate the efficacy of deep learning approaches. This includes implementing classic neural network architectures to capture high-dimensional non-linear dependencies. Maybe we will include some state-of-the-art models like Mamba and xLSTM. Of course most of the work is going to be in the MLops aspect of the course.
 </h3>
 
 Project Organization
@@ -70,10 +70,11 @@ Project Organization
 --------
 
 <p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
-
+<h1>
+TODO update this.</h1>
 
 <h1>
-to start run the following commands
+To start run the following commands
 </h1>
 <p>
 conda create -n <conda name> python=3.13
@@ -95,3 +96,63 @@ run src/data/make_dataset
 <p>
 run src/models/train_model
 </p>
+
+<h1>
+docker guide
+</h1>
+
+<p>
+from root docker build -t mlops-train .
+</p>
+<p>
+docker run mlops-train
+</p>
+<p>
+with parrams docker run mlops-train python src/models/train_rnn.py model_type=gru region=DE epochs=5
+</p>
+
+
+# GCP
+
+## Initial Setup
+
+1. **Authenticate with GCP**
+```bash
+gcloud auth login
+gcloud auth application-default login
+gcloud config set project <your-project-id>
+```
+
+2. **Create GCP bucket** (if not exists)
+```bash
+gcloud storage buckets create gs://mlops-dataset-84636 \
+  --location=europe-west4 \
+  --default-storage-class=STANDARD \
+  --uniform-bucket-level-access
+
+gcloud storage buckets update gs://mlops-dataset-84636 --versioning
+```
+
+3. **Initialize DVC with GCP remote**
+```bash
+make dvc-init
+```
+
+**Pull data** (download from cloud to local)
+```bash
+make dvc-pull
+```
+
+**Push data** (upload from local to cloud)
+```bash
+make dvc-push
+```
+
+## Adding New Data Files
+
+```bash
+dvc add data/raw/newfile.csv
+git add data/raw/newfile.csv.dvc .gitignore
+git commit -m "Track newfile.csv with DVC"
+make dvc-push
+```

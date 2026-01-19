@@ -1,3 +1,6 @@
+import os
+
+import numpy as np
 import pandas as pd
 import xgboost as xgb
 import numpy as np
@@ -7,9 +10,11 @@ import wandb
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 
+
 def load_data(filepath):
     df = pd.read_csv(filepath, index_col=0, parse_dates=True)
     return df
+
 
 def train_and_evaluate(dataset_name):
     file_path = f"data/raw/{dataset_name}.csv"
@@ -29,7 +34,7 @@ def train_and_evaluate(dataset_name):
 
     df = load_data(file_path)
     print("data loaded")
-    price_col = [col for col in df.columns if 'price' in col.lower()][0]
+    price_col = [col for col in df.columns if "price" in col.lower()][0]
     feature_cols = [col for col in df.columns if col != price_col]
 
     X = df[feature_cols]
@@ -53,9 +58,10 @@ def train_and_evaluate(dataset_name):
     wandb.finish()
 
 def main():
-    datasets = ['NP', 'PJM', 'BE', 'FR', 'DE']
+    datasets = ["NP", "PJM", "BE", "FR", "DE"]
     for dataset in datasets:
         train_and_evaluate(dataset)
+
 
 if __name__ == "__main__":
     main()

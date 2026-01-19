@@ -1,4 +1,4 @@
-.PHONY: clean data lint requirements sync_data_to_s3 sync_data_from_s3
+.PHONY: clean data lint requirements sync_data_to_s3 sync_data_from_s3 test test_coverage pre-commit-install pre-commit-run pre-commit-update dvc-init dvc-pull dvc-push dvc-status
 
 #################################################################################
 # GLOBALS                                                                       #
@@ -9,6 +9,7 @@ BUCKET = [OPTIONAL] your-bucket-for-syncing-data (do not include 's3://')
 PROFILE = default
 PROJECT_NAME = mlops
 PYTHON_INTERPRETER = python3
+GCP_BUCKET = mlops-dataset-84636
 
 ifeq (,$(shell which conda))
 HAS_CONDA=False
@@ -22,8 +23,12 @@ endif
 
 ## Install Python Dependencies
 requirements: test_environment
-	$(PYTHON_INTERPRETER) -m pip install -U pip setuptools wheel
-	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
+	@if command -v uv > /dev/null; then \
+		uv sync; \
+	else \
+		$(PYTHON_INTERPRETER) -m pip install -U pip setuptools wheel; \
+		$(PYTHON_INTERPRETER) -m pip install -r requirements.txt; \
+	fi
 
 ## Make Dataset
 data: requirements
@@ -54,6 +59,24 @@ else
 	aws s3 sync s3://$(BUCKET)/data/ data/ --profile $(PROFILE)
 endif
 
+## Initialize DVC and configure GCP remote
+dvc-init:
+	@echo "Initializing DVC..."
+	dvc init
+	@echo "Adding GCP remote..."
+	dvc remote add -d gcp-remote gs://$(GCP_BUCKET)
+	@echo "DVC initialized with GCP remote"
+
+## Pull data from DVC remote (GCP bucket)
+dvc-pull:
+	@echo "Pulling data from GCP bucket..."
+	dvc pull
+
+## Push data to DVC remote (GCP bucket)
+dvc-push:
+	@echo "Pushing data to GCP bucket..."
+	dvc push
+
 ## Set up python interpreter environment
 create_environment:
 ifeq (True,$(HAS_CONDA))
@@ -75,6 +98,42 @@ endif
 ## Test python environment is setup correctly
 test_environment:
 	$(PYTHON_INTERPRETER) test_environment.py
+
+test:
+	pytest tests/ -v
+
+test_coverage:
+	pytest tests/ -v --cov=src --cov-report=html
+
+## Format code with ruff
+format:
+	uv run ruff format src/ tests/
+	uv run ruff check --fix src/ tests/
+
+## Lint code with ruff
+lint_all:
+	uv run ruff check src/ tests/
+	uv run ruff format --check src/ tests/
+
+check: lint_all test_coverage
+
+## Install pre-commit hooks
+pre-commit-install:
+	uv run pre-commit install
+
+## Run pre-commit on all files
+pre-commit-run:
+	uv run pre-commit run --all-files
+
+## Update pre-commit hooks
+pre-commit-update:
+	uv run pre-commit autoupdate
+
+fix:
+	uv run ruff format .
+	uv run ruff check --fix .
+#uv run pre-commit run --all-files
+
 
 #################################################################################
 # PROJECT RULES                                                                 #
