@@ -110,3 +110,49 @@ docker run mlops-train
 <p>
 with parrams docker run mlops-train python src/models/train_rnn.py model_type=gru region=DE epochs=5
 </p>
+
+
+# GCP
+
+## Initial Setup
+
+1. **Authenticate with GCP**
+```bash
+gcloud auth login
+gcloud auth application-default login
+gcloud config set project <your-project-id>
+```
+
+2. **Create GCP bucket** (if not exists)
+```bash
+gcloud storage buckets create gs://mlops-dataset-84636 \
+  --location=europe-west4 \
+  --default-storage-class=STANDARD \
+  --uniform-bucket-level-access
+
+gcloud storage buckets update gs://mlops-dataset-84636 --versioning
+```
+
+3. **Initialize DVC with GCP remote**
+```bash
+make dvc-init
+```
+
+**Pull data** (download from cloud to local)
+```bash
+make dvc-pull
+```
+
+**Push data** (upload from local to cloud)
+```bash
+make dvc-push
+```
+
+## Adding New Data Files
+
+```bash
+dvc add data/raw/newfile.csv
+git add data/raw/newfile.csv.dvc .gitignore
+git commit -m "Track newfile.csv with DVC"
+make dvc-push
+```

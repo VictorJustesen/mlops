@@ -1,4 +1,4 @@
-.PHONY: clean data lint requirements sync_data_to_s3 sync_data_from_s3 test test_coverage pre-commit-install pre-commit-run pre-commit-update
+.PHONY: clean data lint requirements sync_data_to_s3 sync_data_from_s3 test test_coverage pre-commit-install pre-commit-run pre-commit-update dvc-init dvc-pull dvc-push dvc-status
 
 #################################################################################
 # GLOBALS                                                                       #
@@ -9,6 +9,7 @@ BUCKET = [OPTIONAL] your-bucket-for-syncing-data (do not include 's3://')
 PROFILE = default
 PROJECT_NAME = mlops
 PYTHON_INTERPRETER = python3
+GCP_BUCKET = mlops-dataset-84636
 
 ifeq (,$(shell which conda))
 HAS_CONDA=False
@@ -57,6 +58,24 @@ ifeq (default,$(PROFILE))
 else
 	aws s3 sync s3://$(BUCKET)/data/ data/ --profile $(PROFILE)
 endif
+
+## Initialize DVC and configure GCP remote
+dvc-init:
+	@echo "Initializing DVC..."
+	dvc init
+	@echo "Adding GCP remote..."
+	dvc remote add -d gcp-remote gs://$(GCP_BUCKET)
+	@echo "DVC initialized with GCP remote"
+
+## Pull data from DVC remote (GCP bucket)
+dvc-pull:
+	@echo "Pulling data from GCP bucket..."
+	dvc pull
+
+## Push data to DVC remote (GCP bucket)
+dvc-push:
+	@echo "Pushing data to GCP bucket..."
+	dvc push
 
 ## Set up python interpreter environment
 create_environment:
