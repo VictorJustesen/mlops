@@ -16,6 +16,9 @@ dependencies = [
     "torch>=2.5.0",
     "torchvision>=0.20.0",
     "typer>=0.9.0",
+    "matplotlib>=3.10.8",
+    "loguru>=0.7.3",
+    "wandb>=0.24.0",
     "matplotlib>=3.10.0",
     "pytest>=8.0.0",
     "pytest-cov>=6.0.0",
@@ -28,6 +31,7 @@ dependencies = [
     "dvc-gs>=3.0.2",
     "uvicorn>=0.30.0",
     "fastapi>=0.115.0",
+    "markdown>=3.10",
 ]
 # "pre-commit = 4.0.0"
 
@@ -52,7 +56,7 @@ rnn_data = "src.features.rnn_data:main"
 
 [tool.uv]
 package = true
-required-environments = ["sys_platform == 'linux' and platform_machine == 'x86_64'"] # For Cloud Build
+required-environments = ["sys_platform == 'linux' and platform_machine == 'x86_64'"]
 
 
 [tool.black]
