@@ -73,8 +73,8 @@ def train(cfg: DictConfig):
 
     # Prepare data loaders
     root_dir = hydra.utils.get_original_cwd()
-    train_csv = os.path.join(root_dir, "src/data/grouped", f"{cfg.region}_train.csv")
-    test_csv = os.path.join(root_dir, "src/data/grouped", f"{cfg.region}_test.csv")
+    train_csv = os.path.join(root_dir, "data/grouped", f"{cfg.region}_train.csv")
+    test_csv = os.path.join(root_dir, "data/grouped", f"{cfg.region}_test.csv")
     train_set = SequenceDataset(train_csv, window_size=window_size, input_features=input_features)
     test_set = SequenceDataset(test_csv, window_size=window_size, input_features=input_features)
     train_loader = DataLoader(train_set, batch_size=cfg.batch_size, shuffle=True)
@@ -139,9 +139,10 @@ def train(cfg: DictConfig):
         model.train()
 
     print("Training complete")
-    torch.save(model.state_dict(), f"model_{model_name}_{cfg.region}.pth")
+    model_path = f"model_{model_name}_{cfg.region}.pth"
+    torch.save(model.state_dict(), model_path)
+    print(f"Model saved to {model_path}")
 
-    # Plot training and test loss
     plt.figure(figsize=(10, 5))
     plt.plot(statistics["train_loss"], label="Train loss")
     plt.plot(statistics["test_loss"], label="Test loss")
@@ -150,7 +151,9 @@ def train(cfg: DictConfig):
     plt.ylabel("Loss")
     plt.legend()
     plt.tight_layout()
-    plt.savefig(f"training_statistics_{model_name}_{cfg.region}.png")
+    plot_path = f"training_statistics_{model_name}_{cfg.region}.png"
+    plt.savefig(plot_path)
+    print(f"Training plot saved to {plot_path}")
 
 
 if __name__ == "__main__":
