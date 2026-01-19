@@ -78,7 +78,7 @@ def train(cfg: DictConfig):
     print(OmegaConf.to_yaml(cfg))
 
     # Initialize wandb run
-    run = wandb.init(project="mlops", name=f"{cfg.model_type}_{cfg.region}_rnn", reinit=True)
+    wandb.init(project="mlops", name=f"{cfg.model_type}_{cfg.region}_rnn", reinit=True)
     wandb.config.update(OmegaConf.to_container(cfg, resolve=True))
 
     window_size = cfg.get("window_size", DEFAULT_WINDOW_SIZE)
