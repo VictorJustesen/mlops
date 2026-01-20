@@ -378,7 +378,11 @@ We primarily utilized config files, which means a lot of standard hyperparameter
 >
 > Answer:
 
---- question 17 fill here ---
+We used Cloud Storage Bucket to store our data and models. We used the python package dvc-gcp to link our data version control with our GCP bucket.
+We stored our train and api images in Artifact Registry, which is GCP's docker image storage service.
+Cloud Build was used to automatically build our docker images and deploy them when code is pushed to the repository.
+Vertex AI was used to train our models in the cloud using our docker images. The trained models were then pushed back to our Bucket.
+Cloud Run was used to deploy our trained model as an API using our api docker image.
 
 ### Question 18
 
@@ -393,7 +397,7 @@ We primarily utilized config files, which means a lot of standard hyperparameter
 >
 > Answer:
 
---- question 18 fill here ---
+We did not directly use Compute Engine in our project. Instead, we used Vertex AI to handle the training of our models and Cloud Run to deploy our API. Both of these services run on top of Compute Engine, but they abstract away the need for us to manage individual virtual machines directly. For Vertex AI training, we used the N1-standard-4 machine type, which provided 4 vCPUs and 15GB of memory which was enough CPU and memory for our training workload. We used our custom trainer docker image in Vertex AI with a config file (vertex_config.yaml) that specified startup commands, model hyperparameters, and data locations in GCS.
 
 ### Question 19
 
@@ -402,7 +406,8 @@ We primarily utilized config files, which means a lot of standard hyperparameter
 >
 > Answer:
 
---- question 19 fill here ---
+![data bucket](figures/data-bucket.png)
+![model bucket](figures/model-bucket.png)
 
 ### Question 20
 
@@ -411,7 +416,7 @@ We primarily utilized config files, which means a lot of standard hyperparameter
 >
 > Answer:
 
---- question 20 fill here ---
+![gcp registry](figures/registry.png)
 
 ### Question 21
 
@@ -420,7 +425,7 @@ We primarily utilized config files, which means a lot of standard hyperparameter
 >
 > Answer:
 
---- question 21 fill here ---
+![gcp build](figures/build.png)
 
 ### Question 22
 
@@ -435,7 +440,8 @@ We primarily utilized config files, which means a lot of standard hyperparameter
 >
 > Answer:
 
---- question 22 fill here ---
+We trained our model using Vertex AI. After a bit of googling and asking AI models, we chose Vertex AI because it seemed like the more mature platform and the type of platform we would use in future projects or professional work. It was probably a bit "overkill" for our simple model and dataset, but it was a good learning experience.
+We created a docker image for training our model and pushed it to GCP Artifact Registry. We used a simple config file that created a custom training job that used our docker image and specified the necessary parameters such as machine type, region, and data locations. Once the job was started, Vertex AI handled the provisioning of resources and execution of the training job in the cloud. After training, the model was saved to our GCP bucket.
 
 ## Deployment
 
@@ -452,7 +458,8 @@ We primarily utilized config files, which means a lot of standard hyperparameter
 >
 > Answer:
 
---- question 23 fill here ---
+We created a backend API for our model using FastAPI since we've worked with a it before and found it easy to use. The API has two endpoints: a root endpoint that returns a message along with the model information, and a predict endpoint that accepts POST requests with input data in JSON format. The predict endpoint preprocesses the input data, runs it through the trained model, and returns the predictions in JSON format. We also added error handling to return appropriate error messages for invalid inputs.
+On startup it either loads a local model file or downloads the model from our GCP bucket if deployed in the cloud. For a production system we would add authentication and logging to the API.
 
 ### Question 24
 
@@ -468,7 +475,8 @@ We primarily utilized config files, which means a lot of standard hyperparameter
 >
 > Answer:
 
---- question 24 fill here ---
+We deployed our API both locally and in the cloud. For local deployment, we used Docker to containerize our FastAPI application, which we could run with a simple make command. For cloud deployment, we used GCP Cloud Run. Our cloudbuild.yaml automates the entire process: building the docker image, pushing it to Artifact Registry, and deploying to Cloud Run. The API downloads the trained model from our GCS bucket at startup. To invoke the deployed service, a user would call `curl -X POST -H "Content-Type: application/json" -d '{"features": [[10.0, 50.0, 20.0], ...]}' https://rnn-api-<hash>-ew.a.run.app/predict`.
+If this was a production setting we would add authentication and logging to the API.
 
 ### Question 25
 
@@ -498,7 +506,9 @@ We primarily utilized config files, which means a lot of standard hyperparameter
 >
 > Answer:
 
---- question 26 fill here ---
+We implemented basic monitoring and alerting for our deployed API. Cloud Run automatically provides monitoring dashboards that track request counts, response times, error rates, and resource usage (CPU/memory). We set up email alerts through GCP Cloud Monitoring that notify us whenever the API returns 5xx errors, so we get immediately informed if something breaks in production.
+
+For a more robust production system, we would add custom monitoring to track model-specific metrics like prediction distributions, input data statistics, and inference times. We would also implement data drift detection to monitor if the input data distribution changes over time, which could degrade model performance. This would require collecting and storing prediction inputs over time, which we didn't implement in this project.
 
 ## Overall discussion of project
 
@@ -517,8 +527,16 @@ We primarily utilized config files, which means a lot of standard hyperparameter
 >
 > Answer:
 
---- question 27 fill here ---
+Our expenses was quite low, as we primarily used free-tier services and our model training was fast. Group member S234868 used approximately $1. Cloud build were the most expensive service, as it built and deployed our docker images multiple times during development. Cloud Run was set to scale down to zero when not in use causing cold starts but keeping costs low. Vertex AI took about 10-15 minutes to load up and train our model.
+The cost was as follows:
 
+- Cloud Build: $0.59
+- Artifiact Registry: $0.33
+- Vertex AI: $0.09
+- Cloud Run: $0.01
+
+
+Working in the cloud was generally a positive experience. It did cause more errors compared to local development, for example some eu region did not have certain compute types available or docker images had to be built in a certain way to work in GCP.
 ### Question 28
 
 > **Did you implement anything extra in your project that is not covered by other questions? Maybe you implemented**
