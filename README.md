@@ -154,6 +154,16 @@ gcloud storage buckets update gs://mlops-dataset-84636 --versioning
 make dvc-init
 ```
 
+5. **Set up email alerts for Cloud Run errors (OPTIONAL)**
+
+**Easiest method:** Use GCP Console
+- Go to: **Monitoring > Alerting > Create Policy**
+- Select **Cloud Run Revision** resource
+- Metric: `Request count` filtered by `response_code_class = 5xx`
+- Threshold: > 0 for 5 minutes
+- Add your email in notification channels
+
+
 **Pull data** (download from cloud to local)
 ```bash
 make dvc-pull
