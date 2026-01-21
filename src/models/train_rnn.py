@@ -1,6 +1,5 @@
 import os
 import sys
-
 import hydra
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,22 +8,17 @@ import torch
 import wandb
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, Dataset
-
 import typer
-
-import sys
-import typer
-
-app = typer.Typer(add_completion=False, invoke_without_command=True)
+import pytorch_lightning as pl
+from src.models.rnn import PriceGRU, PriceLSTM, get_default_callbacks
 
 sys.path.append(os.getcwd())
-from src.models.rnn import PriceGRU, PriceLSTM, get_default_callbacks
-import pytorch_lightning as pl
+
+app = typer.Typer(add_completion=False, invoke_without_command=True)
 
 # Optional GCS support
 try:
     from google.cloud import storage
-
     HAS_GCS = True
 except ImportError:
     HAS_GCS = False
