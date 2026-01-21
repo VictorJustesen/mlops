@@ -20,6 +20,7 @@ app = typer.Typer(add_completion=False, invoke_without_command=True)
 # Optional GCS support
 try:
     from google.cloud import storage  # noqa: F401
+
     HAS_GCS = True
 except ImportError:
     HAS_GCS = False
@@ -87,7 +88,7 @@ def train(cfg: DictConfig):
     window_size = cfg.get("window_size", DEFAULT_WINDOW_SIZE)
     input_features = cfg.get("input_features", DEFAULT_INPUT_FEATURES)
 
-    #prepare data paths
+    # prepare data paths
     data_path = cfg.get("data_path", "data/grouped")
     if not os.path.isabs(data_path):
         root_dir = hydra.utils.get_original_cwd()
@@ -99,9 +100,10 @@ def train(cfg: DictConfig):
     test_csv = os.path.join(data_path, "data/rnn", f"{cfg.region}_test.csv")
     train_set = SequenceDataset(train_csv, window_size=window_size, input_features=input_features)
     test_set = SequenceDataset(test_csv, window_size=window_size, input_features=input_features)
-    train_loader = DataLoader(train_set, batch_size=cfg.batch_size, num_workers=7, shuffle=False) # Make sure shuffle is False.
+    train_loader = DataLoader(
+        train_set, batch_size=cfg.batch_size, num_workers=7, shuffle=False
+    )  # Make sure shuffle is False.
     test_loader = DataLoader(test_set, batch_size=cfg.batch_size, num_workers=7)
-
 
     # Model selection
     if cfg.model_type.lower() == "lstm":
@@ -110,7 +112,7 @@ def train(cfg: DictConfig):
             hidden_size=cfg.hidden_size,
             num_layers=cfg.num_layers,
             dropout=cfg.dropout,
-            lr=cfg.lr
+            lr=cfg.lr,
         )
         model_name = "lstm"
     elif cfg.model_type.lower() == "gru":
@@ -130,7 +132,9 @@ def train(cfg: DictConfig):
         max_epochs=cfg.epochs,
         accelerator="gpu" if torch.cuda.is_available() else "cpu",
         callbacks=callbacks,
-        logger=pl.loggers.WandbLogger(project="mlops", name=f"{cfg.model_type}_{cfg.region}_rnn", reinit=True)
+        logger=pl.loggers.WandbLogger(
+            project="mlops", name=f"{cfg.model_type}_{cfg.region}_rnn", reinit=True
+        ),
     )
 
     # Train the model
@@ -140,15 +144,28 @@ def train(cfg: DictConfig):
     trainer.save_checkpoint(f"model_{model_name}_{cfg.region}.ckpt")
     wandb.finish()
 
+
 @app.callback()
 def main(
-    batch_size: int = typer.Option(None, "--batch-size", "--batch_size", help="Batch size override for Hydra"),
-    dropout: float = typer.Option(None, "--dropout", "--dropout", help="Dropout override for Hydra"),
-    hidden_size: int = typer.Option(None, "--hidden-size", "--hidden_size", help="Hidden size override for Hydra"),
+    batch_size: int = typer.Option(
+        None, "--batch-size", "--batch_size", help="Batch size override for Hydra"
+    ),
+    dropout: float = typer.Option(
+        None, "--dropout", "--dropout", help="Dropout override for Hydra"
+    ),
+    hidden_size: int = typer.Option(
+        None, "--hidden-size", "--hidden_size", help="Hidden size override for Hydra"
+    ),
     lr: float = typer.Option(None, "--lr", "--lr", help="Learning rate override for Hydra"),
-    model_type: str = typer.Option(None, "--model-type", "--model_type", help="Model type override for Hydra"),
-    num_layers: int = typer.Option(None, "--num-layers", "--num_layers", help="Num layers override for Hydra"),
-    data_path: str = typer.Option(None, "--data-path", "--data_path", help="Data path override for Hydra")
+    model_type: str = typer.Option(
+        None, "--model-type", "--model_type", help="Model type override for Hydra"
+    ),
+    num_layers: int = typer.Option(
+        None, "--num-layers", "--num_layers", help="Num layers override for Hydra"
+    ),
+    data_path: str = typer.Option(
+        None, "--data-path", "--data_path", help="Data path override for Hydra"
+    ),
 ):
     """Default command: runs train(). Allows Hydra config overrides via CLI options."""
     # Build sys.argv for Hydra overrides
@@ -169,6 +186,7 @@ def main(
         overrides.append(f"data_path={data_path}")
     sys.argv = [sys.argv[0]] + overrides
     train()
+
 
 if __name__ == "__main__":
     app()

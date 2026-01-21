@@ -58,7 +58,6 @@ class PriceLSTM(pl.LightningModule):
         return torch.optim.Adam(self.parameters(), lr=self.lr)
 
 
-
 class PriceGRU(pl.LightningModule):
     """
     GRU-based model for time series forecasting using PyTorch Lightning.
