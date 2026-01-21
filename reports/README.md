@@ -218,7 +218,7 @@ We utilized ruff for linting, pep8 for good coding formatting, and mypy for type
 >
 > Answer:
 
---- question 7 fill here ---
+During the development of the project we implemented a range of tests, ranging from typing/linting, to testing if core scripts, such as the machine learning models, work as intended.
 
 ### Question 8
 
@@ -233,7 +233,7 @@ We utilized ruff for linting, pep8 for good coding formatting, and mypy for type
 >
 > Answer:
 
---- question 8 fill here ---
+As I am writing this the code coverage lies on 30%, which of course is far from the 100% to be aimed at. However - We do not necessarily agree that a code coverage of 100% means we can trust the code to be error free. It is important to have 'high quality'-tests, that are able to truly test and identify any issues that might appear. We could go in and implement some very simple tests that just checks if the code runs - However, that might not be a good indication, if it runs, but does not produce meaningful results.
 
 ### Question 9
 
@@ -248,7 +248,7 @@ We utilized ruff for linting, pep8 for good coding formatting, and mypy for type
 >
 > Answer:
 
-Yes, we started with utilizing branches, and eventually also included pull requests. Branches were agreed upon to be used for new implementations (e.g. module X and Y, or "New Feature"), this meant that if necessary, we could observe what the others were in the middle of, and pull it if necessary, without horizontal interferance.
+Yes, we started with utilizing branches, and eventually also included pull requests. Branches were agreed upon to be used for new implementations (e.g. module X and Y, or "New Feature"), this meant that if necessary, we could observe what the others were in the middle of, and pull it if necessary, without horizontal interferance. Additionally, when code was pushed/merged to the main, we utilized the tests and workflows, to guarantee a new user would be able to run the code - As well as quality of life, keeping the expression of the code to a high(er) standard than we normally might.
 
 ### Question 10
 
@@ -263,7 +263,8 @@ Yes, we started with utilizing branches, and eventually also included pull reque
 >
 > Answer:
 
---- question 10 fill here ---
+As I am writing this, we have not fully utilized DVC for properly managing our data. While we discussed it during cloud solution it remains to be implemented.
+However, DVC can be instrumental in cases where you have enourmes amounts of data that you want to store and organize. In our case, the data is rather manegable, and we'd have to scale up our datapool monumentally (we have every hour by hour energy price/production/expected_consumption for 5 powergrids, some back from 2010), so it seemed excessive for us to implement DVC, for something that can be stored anywhere, and even downloaded to anywhere.
 
 ### Question 11
 
@@ -280,7 +281,7 @@ Yes, we started with utilizing branches, and eventually also included pull reque
 >
 > Answer:
 
---- question 11 fill here ---
+We are utilizing GitHub actions for the continous integration, featuring both workflows for linting and testing. This is forced on pushes and merges that target the main branch. For the operating systems we test the 3 major operating systems; Windows, MacOS and Ubuntu, that should ensure compatibility across most platforms. And for the test we do Python versioning, that tests the Python installation by installing the uv package manager, setting up the environment and runs the basic tests and reporting coverage. Additionally we also implemented the linting workflow, which simply checks linting and formatting utilizing ruff on src and test directories.
 
 ## Running code and tracking experiments
 
@@ -331,7 +332,13 @@ We primarily utilized config files, which means a lot of standard hyperparameter
 >
 > Answer:
 
---- question 14 fill here ---
+![wandb experiment](figures/wandb_21_01_2026.png)
+
+On the first image, it can be seen that we have implementing tracking for basic experimental performance. Logging MSE training/validation loss, as well as other basic peromance metricles for our experiments.
+
+![wandb sweep](figures/sweep_21_01_2026)
+
+Additionally, which can be seen here on the latter image, we also agreed upon implementing a sweep function, which allows us the run sweeps of the models, utilizing a bayesian optimizer. While it has not been ran a sufficient amount of times, it can be ran for however long desired, or until no better hyperparameters can be found.
 
 ### Question 15
 
@@ -600,4 +607,4 @@ Working in the cloud was generally a positive experience. It did cause more erro
 > *We have used ChatGPT to help debug our code. Additionally, we used GitHub Copilot to help write some of our code.*
 > Answer:
 
---- question 31 fill here ---
+We confirm that during the project we have utilized generative AI for this project, such as GitHub Copilot, as recommended in the course material. The tasks for which AI was utilized ranged from research to troubleshooting, to clarifications.
