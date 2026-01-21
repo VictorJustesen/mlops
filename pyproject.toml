@@ -29,6 +29,8 @@ dependencies = [
     "google-api-python-client>=2.188.0",
     "dvc-gs>=3.0.2",
     "markdown>=3.10",
+    "pytorch-lightning>=2.6.0",
+    "mypy>=1.19.1",
 ]
 # "pre-commit = 4.0.0"
 
@@ -40,18 +42,24 @@ torch = [
 torchvision = [
     { index = "pytorch-cpu" },
 ]
+mlops = { workspace = true, editable = true }
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
+[tool.uv.workspace]
+members = [
+    ".",
+]
+
 [tool.uv]
 required-environments = ["sys_platform == 'linux' and platform_machine == 'x86_64'"]
 
 [project.scripts]
 make_data = "src.data.make_dataset:main"
-train_rnn = "src.models.train_rnn:train"
+train_rnn = "src.models.train_rnn:app"
 rnn_data = "src.features.rnn_data:main"
 
 [tool.black]
@@ -76,3 +84,8 @@ line-ending = "auto"
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "mlops",
+]

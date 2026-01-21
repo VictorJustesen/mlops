@@ -95,6 +95,12 @@ target/
 # Hydracore cache
 outputs/
 
+# wandb logs
+wandb/
+
+# Other log checkpoints?
+mlops/
+
 # models
 model_gru_FR.pth
 model_lstm_FR.pth
