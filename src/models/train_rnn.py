@@ -18,7 +18,7 @@ app = typer.Typer(add_completion=False, invoke_without_command=True)
 
 # Optional GCS support
 try:
-    from google.cloud import storage
+    from google.cloud import storage # noqa: F401
     HAS_GCS = True
 except ImportError:
     HAS_GCS = False
