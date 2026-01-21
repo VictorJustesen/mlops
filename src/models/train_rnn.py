@@ -10,8 +10,16 @@ import wandb
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, Dataset
 
+import typer
+
+import sys
+import typer
+
+app = typer.Typer(add_completion=False, invoke_without_command=True)
+
 sys.path.append(os.getcwd())
-from src.models.rnn import PriceGRU, PriceLSTM
+from src.models.rnn import PriceGRU, PriceLSTM, get_default_callbacks
+import pytorch_lightning as pl
 
 # Optional GCS support
 try:
@@ -84,131 +92,88 @@ def train(cfg: DictConfig):
     window_size = cfg.get("window_size", DEFAULT_WINDOW_SIZE)
     input_features = cfg.get("input_features", DEFAULT_INPUT_FEATURES)
 
-    # Prepare data paths
+    #prepare data paths
     data_path = cfg.get("data_path", "data/grouped")
     if not os.path.isabs(data_path):
         root_dir = hydra.utils.get_original_cwd()
         data_path = os.path.join(root_dir, data_path)
 
-    print(f"Loading data from: {data_path}")
-    train_csv = os.path.join(data_path, f"{cfg.region}_train.csv")
-    test_csv = os.path.join(data_path, f"{cfg.region}_test.csv")
-
-    if not os.path.exists(train_csv):
-        raise FileNotFoundError(f"Training data not found at {train_csv}")
-
+    # Prepare data loaders
+    root_dir = hydra.utils.get_original_cwd()
+    train_csv = os.path.join(data_path, "data/rnn", f"{cfg.region}_train.csv")
+    test_csv = os.path.join(data_path, "data/rnn", f"{cfg.region}_test.csv")
     train_set = SequenceDataset(train_csv, window_size=window_size, input_features=input_features)
     test_set = SequenceDataset(test_csv, window_size=window_size, input_features=input_features)
-    train_loader = DataLoader(train_set, batch_size=cfg.batch_size, shuffle=True)
-    test_loader = DataLoader(test_set, batch_size=cfg.batch_size)
+    train_loader = DataLoader(train_set, batch_size=cfg.batch_size, num_workers=7, shuffle=False) # Make sure shuffle is False.
+    test_loader = DataLoader(test_set, batch_size=cfg.batch_size, num_workers=7)
+    
 
     # Model selection
     if cfg.model_type.lower() == "lstm":
         model = PriceLSTM(
-            input_size=len(input_features), hidden_size=cfg.hidden_size, num_layers=cfg.num_layers
-        ).to(DEVICE)
+            input_size=len(input_features),
+            hidden_size=cfg.hidden_size,
+            num_layers=cfg.num_layers,
+            dropout=cfg.dropout,
+            lr=cfg.lr
+        )
         model_name = "lstm"
     elif cfg.model_type.lower() == "gru":
         model = PriceGRU(
-            input_size=len(input_features), hidden_size=cfg.hidden_size, num_layers=cfg.num_layers
-        ).to(DEVICE)
+            input_size=len(input_features),
+            hidden_size=cfg.hidden_size,
+            num_layers=cfg.num_layers,
+            dropout=cfg.dropout,
+        )
         model_name = "gru"
     else:
         raise ValueError("model_type must be 'lstm' or 'gru'")
 
-    loss_fn = torch.nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=cfg.lr)
+    # PyTorch Lightning Trainer setup
+    callbacks = get_default_callbacks()
+    trainer = pl.Trainer(
+        max_epochs=cfg.epochs,
+        accelerator="gpu" if torch.cuda.is_available() else "cpu",
+        callbacks=callbacks,
+        logger=pl.loggers.WandbLogger(project="mlops", name=f"{cfg.model_type}_{cfg.region}_rnn", reinit=True)
+    )
 
-    statistics = {"train_loss": [], "test_loss": []}
+    # Train the model
+    trainer.fit(model, train_loader, test_loader)
 
-    for epoch in range(cfg.epochs):
-        model.train()
-        epoch_loss = 0.0
-        total_train_samples = 0
-        # Training loop
-        for i, (x, y) in enumerate(train_loader):
-            x, y = x.to(DEVICE), y.to(DEVICE)
-            optimizer.zero_grad()
-            y_pred = model(x)
-            y = y.unsqueeze(1)  # (batch, 1)
-            loss = loss_fn(y_pred, y)
-            loss.backward()
-            optimizer.step()
-            batch_size = x.size(0)
-            epoch_loss += loss.item() * batch_size
-            total_train_samples += batch_size
-            if i % 100 == 0:
-                print(f"Epoch {epoch}, iter {i}, loss: {loss.item()}")
-        avg_loss = epoch_loss / total_train_samples if total_train_samples > 0 else float("nan")
-        statistics["train_loss"].append(avg_loss)
-
-        # Test set evaluation
-        model.eval()
-        test_loss = 0.0
-        total_test_samples = 0
-        with torch.no_grad():
-            for x, y in test_loader:
-                x, y = x.to(DEVICE), y.to(DEVICE)
-                y_pred = model(x)
-                y = y.unsqueeze(1)
-                loss = loss_fn(y_pred, y)
-                batch_size = x.size(0)
-                test_loss += loss.item() * batch_size
-                total_test_samples += batch_size
-        avg_test_loss = test_loss / total_test_samples if total_test_samples > 0 else float("nan")
-        statistics["test_loss"].append(avg_test_loss)
-        print(f"Epoch {epoch} avg loss: {avg_loss:.6f} | test loss: {avg_test_loss:.6f}")
-        # Log losses to wandb
-        wandb.log({"epoch": epoch, "train_loss": avg_loss, "test_loss": avg_test_loss})
-        model.train()
-
-    print("Training complete")
-    models_dir = os.path.join(os.getcwd(), "models")
-    os.makedirs(models_dir, exist_ok=True)
-    model_path = os.path.join(models_dir, f"model_{model_name}_{cfg.region}.pth")
-    torch.save(model.state_dict(), model_path)
-    print(f"Model saved to {model_path}")
+    # Save model checkpoint
+    trainer.save_checkpoint(f"model_{model_name}_{cfg.region}.ckpt")
     wandb.finish()
 
-    # Save training plot
-    plt.figure(figsize=(10, 5))
-    plt.plot(statistics["train_loss"], label="Train loss")
-    plt.plot(statistics["test_loss"], label="Test loss")
-    plt.title(f"Train/Test loss (MSE) - {cfg.model_type.upper()} {cfg.region}")
-    plt.xlabel("Epoch")
-    plt.ylabel("Loss")
-    plt.legend()
-    plt.tight_layout()
-    plot_path = os.path.join(models_dir, f"training_statistics_{model_name}_{cfg.region}.png")
-    plt.savefig(plot_path)
-    print(f"Training plot saved to {plot_path}")
-
-    # Optional: Upload to GCS if configured
-    gcs_bucket = os.environ.get("GCS_MODEL_BUCKET")
-    gcs_path = os.environ.get("GCS_MODEL_PATH", "models")
-
-    if gcs_bucket and HAS_GCS:
-        try:
-            print(f"Uploading model to GCS: gs://{gcs_bucket}/{gcs_path}/")
-            client = storage.Client()
-            bucket = client.bucket(gcs_bucket)
-
-            # Upload model file
-            blob = bucket.blob(f"{gcs_path}/model_{model_name}_{cfg.region}.pth")
-            blob.upload_from_filename(model_path)
-            print(f"Uploaded {model_path} to gs://{gcs_bucket}/{gcs_path}/")
-
-            # Upload training plot
-            plot_blob = bucket.blob(f"{gcs_path}/training_statistics_{model_name}_{cfg.region}.png")
-            plot_blob.upload_from_filename(plot_path)
-            print(f"Uploaded {plot_path} to gs://{gcs_bucket}/{gcs_path}/")
-        except Exception as e:
-            print(f"Warning: Could not upload to GCS: {e}")
-    elif gcs_bucket and not HAS_GCS:
-        print("Warning: GCS_MODEL_BUCKET set but google-cloud-storage not installed")
-    else:
-        print("GCS upload skipped (GCS_MODEL_BUCKET not set)")
-
+@app.callback()
+def main(
+    batch_size: int = typer.Option(None, "--batch-size", "--batch_size", help="Batch size override for Hydra"),
+    dropout: float = typer.Option(None, "--dropout", "--dropout", help="Dropout override for Hydra"),
+    hidden_size: int = typer.Option(None, "--hidden-size", "--hidden_size", help="Hidden size override for Hydra"),
+    lr: float = typer.Option(None, "--lr", "--lr", help="Learning rate override for Hydra"),
+    model_type: str = typer.Option(None, "--model-type", "--model_type", help="Model type override for Hydra"),
+    num_layers: int = typer.Option(None, "--num-layers", "--num_layers", help="Num layers override for Hydra"),
+    data_path: str = typer.Option(None, "--data-path", "--data_path", help="Data path override for Hydra")
+):
+    """Default command: runs train(). Allows Hydra config overrides via CLI options."""
+    # Build sys.argv for Hydra overrides
+    overrides = []
+    if batch_size is not None:
+        overrides.append(f"batch_size={batch_size}")
+    if dropout is not None:
+        overrides.append(f"dropout={dropout}")
+    if hidden_size is not None:
+        overrides.append(f"hidden_size={hidden_size}")
+    if lr is not None:
+        overrides.append(f"lr={lr}")
+    if model_type is not None:
+        overrides.append(f"model_type={model_type}")
+    if num_layers is not None:
+        overrides.append(f"num_layers={num_layers}")
+    if data_path is not None:
+        overrides.append(f"data_path={data_path}")
+    sys.argv = [sys.argv[0]] + overrides
+    train()
 
 if __name__ == "__main__":
-    train()
+    app()
