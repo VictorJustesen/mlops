@@ -106,12 +106,12 @@ class SequenceDataset(Dataset):
 def train(cfg: DictConfig):
     """
     Train an RNN model (LSTM/GRU) on a selected region's grouped data using Hydra config.
-    Hydra can be overriden using command line options. e.g. --cfg.model_type=gru --cfg.region=DE
+    Hydra can be overriden using command line options. e.g. --cfg.model_type=gru --cfg.regions=[DE,NP]
 
     Args:
         cfg (DictConfig): Configuration composed by Hydra.
     """
-    print(f"Training {cfg.model_type.upper()} on {cfg.region} grouped data")
+    print(f"Training {cfg.model_type.upper()} on {cfg.regions} grouped data")
     print(OmegaConf.to_yaml(cfg))
 
     # Set seed for reproducibility
@@ -123,13 +123,13 @@ def train(cfg: DictConfig):
         torch.cuda.manual_seed_all(seed)
 
     # Initialize wandb run
-    wandb.init(project="mlops", name=f"{cfg.model_type}_{cfg.region}_rnn", reinit=True)
+    wandb.init(project="mlops", name=f"{cfg.model_type}_{cfg.regions}_rnn", reinit=True)
     wandb.config.update(OmegaConf.to_container(cfg, resolve=True))
 
     window_size = cfg.get("window_size", DEFAULT_WINDOW_SIZE)
     input_features = cfg.get("input_features", DEFAULT_INPUT_FEATURES)
 
-    # prepare data paths
+    print("Preparing data paths and loading datasets...")
     data_path = cfg.get("data_path", "data/grouped")
     if not os.path.isabs(data_path):
         root_dir = hydra.utils.get_original_cwd()
@@ -137,14 +137,19 @@ def train(cfg: DictConfig):
 
     # Prepare data loaders for multiple regions
     regions = cfg.get("regions", [cfg.get("region", "DE")])
-    train_csvs = [os.path.join(data_path, "data/rnn", f"{region}_train.csv") for region in regions]
-    test_csvs = [os.path.join(data_path, "data/rnn", f"{region}_test.csv") for region in regions]
+    train_csvs = [os.path.join(data_path, f"{region}_train.csv") for region in regions]
+    test_csvs = [os.path.join(data_path, f"{region}_test.csv") for region in regions]
+    print(f"Training CSVs: {train_csvs}")
+    print(f"Test CSVs: {test_csvs}")
     train_set = SequenceDataset(train_csvs, window_size=window_size, input_features=input_features)
     test_set = SequenceDataset(test_csvs, window_size=window_size, input_features=input_features)
+    print(f"Number of training samples: {len(train_set)}")
+    print(f"Number of test samples: {len(test_set)}")
     train_loader = DataLoader(
         train_set, batch_size=cfg.batch_size, num_workers=7, shuffle=False
     )  # Make sure shuffle is False.
     test_loader = DataLoader(test_set, batch_size=cfg.batch_size, num_workers=7)
+    print("Data loaders ready.")
 
     # Model selection
     checkpoint_path = cfg.get("checkpoint_path", None)
@@ -158,8 +163,10 @@ def train(cfg: DictConfig):
         raise ValueError("model_type must be 'lstm' or 'gru'")
 
     if checkpoint_path:
+        print(f"Loading model from checkpoint: {checkpoint_path}")
         model = load_model(model_class, checkpoint_path)
     else:
+        print("Initializing new model instance...")
         model = model_class(
             input_size=len(input_features),
             hidden_size=cfg.hidden_size,
@@ -168,26 +175,32 @@ def train(cfg: DictConfig):
             lr=cfg.lr,
         )
 
-    # PyTorch Lightning Trainer setup
+    print("Setting up PyTorch Lightning Trainer...")
     callbacks = get_default_callbacks()
     trainer = pl.Trainer(
         max_epochs=cfg.epochs,
         accelerator="gpu" if torch.cuda.is_available() else "cpu",
         callbacks=callbacks,
         logger=pl.loggers.WandbLogger(
-            project="mlops", name=f"{cfg.model_type}_{cfg.region}_rnn", reinit=True
+            project="mlops", name=f"{cfg.model_type}_{cfg.regions}_rnn", reinit=True
         ),
     )
 
-    # Train the model
+    print("Starting model training...")
     trainer.fit(model, train_loader, test_loader)
+    print("Training complete.")
 
     # Save model checkpoint in 'models' directory at repo root
+    print("Saving model checkpoint...")
     models_dir = os.path.join(hydra.utils.get_original_cwd(), "models")
     os.makedirs(models_dir, exist_ok=True)
-    checkpoint_path = os.path.join(models_dir, f"model_{model_name}_{cfg.region}.ckpt")
+    from datetime import datetime
+    timestamp = datetime.now().strftime("%H%M")
+    checkpoint_path = os.path.join(models_dir, f"model_{model_name}_{timestamp}.ckpt")
     trainer.save_checkpoint(checkpoint_path)
+    print(f"Model checkpoint saved to {checkpoint_path}")
     wandb.finish()
+    print("wandb run finished.")
 
 
 @app.callback()
@@ -196,17 +209,17 @@ def main(
         None, "--batch-size", "--batch_size", help="Batch size override for Hydra"
     ),
     dropout: float = typer.Option(
-        None, "--dropout", "--dropout", help="Dropout override for Hydra"
+        None, "--dropout", help="Dropout override for Hydra"
     ),
     hidden_size: int = typer.Option(
         None, "--hidden-size", "--hidden_size", help="Hidden size override for Hydra"
     ),
-    lr: float = typer.Option(None, "--lr", "--lr", help="Learning rate override for Hydra"),
+    lr: float = typer.Option(None, "--lr", help="Learning rate override for Hydra"),
     model_type: str = typer.Option(
         None, "--model-type", "--model_type", help="Model type override for Hydra"
     ),
     regions: str = typer.Option(
-        None, "--regions", "--regions", help="Comma-separated list of regions to train on"
+        None, "--regions", help="Comma-separated list of regions to train on"
     ),
     num_layers: int = typer.Option(
         None, "--num-layers", "--num_layers", help="Num layers override for Hydra"
@@ -215,7 +228,7 @@ def main(
         None, "--data-path", "--data_path", help="Data path override for Hydra"
     ),
     seed: int = typer.Option(
-        None, "--seed", "--seed", help="Random seed override for Hydra"
+        None, "--seed", help="Random seed override for Hydra"
     ),
     checkpoint_path: str = typer.Option(
         None,
@@ -240,8 +253,12 @@ def main(
     if model_type is not None:
         overrides.append(f"model_type={model_type}")
     if regions is not None:
-        # Accept comma-separated regions from CLI
-        region_list = [r.strip() for r in regions.split(",")]
+        # Accept comma-separated or bracketed regions from CLI
+        if regions.startswith("[") and regions.endswith("]"):
+            # Remove brackets and split
+            region_list = [r.strip().strip('"\'') for r in regions[1:-1].split(",")]
+        else:
+            region_list = [r.strip() for r in regions.split(",")]
         overrides.append(f"regions={region_list}")
     if num_layers is not None:
         overrides.append(f"num_layers={num_layers}")
