@@ -2,12 +2,11 @@ import os
 
 import numpy as np
 import pandas as pd
+import wandb
 import xgboost as xgb
 import yaml
 from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
-
-import wandb
 
 
 def load_data(filepath):

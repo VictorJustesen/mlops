@@ -7,10 +7,10 @@ import pandas as pd
 import pytorch_lightning as pl
 import torch
 import typer
+import wandb
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, Dataset
 
-import wandb
 from src.models.rnn import PriceGRU, PriceLSTM, get_default_callbacks
 
 sys.path.append(os.getcwd())
