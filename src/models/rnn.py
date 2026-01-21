@@ -1,9 +1,9 @@
 # PyTorch RNN models for time series forecasting
 
+import pytorch_lightning as pl
 import torch
 import torch.nn as nn
-import pytorch_lightning as pl
-from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor, RichProgressBar
+from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint, RichProgressBar
 
 
 class PriceLSTM(pl.LightningModule):

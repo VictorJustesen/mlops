@@ -1,15 +1,16 @@
 import os
 import sys
+
 import hydra
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import pytorch_lightning as pl
 import torch
-import wandb
+import typer
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, Dataset
-import typer
-import pytorch_lightning as pl
+
+import wandb
 from src.models.rnn import PriceGRU, PriceLSTM, get_default_callbacks
 
 sys.path.append(os.getcwd())
@@ -18,7 +19,7 @@ app = typer.Typer(add_completion=False, invoke_without_command=True)
 
 # Optional GCS support
 try:
-    from google.cloud import storage # noqa: F401
+    from google.cloud import storage  # noqa: F401
     HAS_GCS = True
 except ImportError:
     HAS_GCS = False
@@ -100,7 +101,7 @@ def train(cfg: DictConfig):
     test_set = SequenceDataset(test_csv, window_size=window_size, input_features=input_features)
     train_loader = DataLoader(train_set, batch_size=cfg.batch_size, num_workers=7, shuffle=False) # Make sure shuffle is False.
     test_loader = DataLoader(test_set, batch_size=cfg.batch_size, num_workers=7)
-    
+
 
     # Model selection
     if cfg.model_type.lower() == "lstm":
