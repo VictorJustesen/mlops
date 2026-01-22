@@ -97,7 +97,7 @@ will check the repositories and the code to verify your answers.
 
 ### Week 3
 
-* [ ] Check how robust your model is towards data drifting (M27)
+* [x] Check how robust your model is towards data drifting (M27)
 * [ ] Setup collection of input-output data from your deployed application (M27)
 * [ ] Deploy to the cloud a drift detection API (M27)
 * [ ] Instrument your API with a couple of system metrics (M28)
@@ -317,7 +317,7 @@ We have made use of both hydra config files, which allows us to maintain a 'stan
 >
 > Answer:
 
-We primarily utilized config files, which means a lot of standard hyperparameters are kept the same, unless the standard hyperparameters are overwritten. Additionally the hydraconfig files will generate a log file locally, so the user can figure out exactly what configurations were utilized at what date.
+We primarily utilized config files, which means a lot of standard hyperparameters are kept the same, unless the standard hyperparameters are overwritten. Additionally the hydraconfig files will generate a log file locally, so the user can figure out exactly what configurations were utilized at what date. Additionally a standard seed is set in the config file, to keep number generation identical. Utilizing pytorchlightning the specific hyperparameters are saved in the checkpoint which is saved in the models/ folder.
 
 ### Question 14
 
@@ -561,7 +561,7 @@ Working in the cloud was generally a positive experience. It did cause more erro
 >
 > Answer:
 
---- question 28 fill here ---
+As mentioned by the question we also implemented a evidently drift detection system, to check if any of the features or the target (price) was drifting. as of now it can be called to test if any new data causes drifting compared to the trained data.
 
 ### Question 29
 
