@@ -5,7 +5,10 @@ from contextlib import asynccontextmanager
 
 import torch
 import yaml
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi.responses import HTMLResponse
+import pandas as pd
+from datetime import datetime
 from pydantic import BaseModel
 
 sys.path.append(os.getcwd())
@@ -183,7 +186,7 @@ def read_root():
 
 
 @app.post("/predict")
-def predict(input_data: PredictionInput):
+def predict(input_data: PredictionInput, background_tasks: BackgroundTasks):
     if model is None:
         raise HTTPException(status_code=503, detail="Model not loaded")
 
@@ -193,7 +196,69 @@ def predict(input_data: PredictionInput):
 
         with torch.no_grad():
             prediction = model(data)
+        
+        pred_val = prediction.item()
 
-        return {"predicted_price": prediction.item()}
+        # Add background task to save data without blocking response
+        background_tasks.add_task(save_prediction_log, input_data.features, pred_val)
+
+        return {"predicted_price": pred_val}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/monitoring", response_class=HTMLResponse)
+def monitoring():
+    """Simple endpoint to return Evidently drift report"""
+    try:
+        # Use legacy as per your monitor_drift.py
+        from evidently.legacy.report import Report
+        from evidently.legacy.metric_preset import DataDriftPreset
+
+        log_file = "prediction_log.csv"
+        if not os.path.exists(log_file):
+            return "<h1>No data logged yet</h1>"
+            
+        # Load current data
+        current_data = pd.read_csv(log_file)
+        
+        # For this simple implementation, we compare the first half of logged data 
+        # against the second half if we don't have a static reference loaded.
+        # Ideally, you load your training data reference here.
+        if len(current_data) < 10:
+            return "<h1>Not enough data for report</h1>"
+            
+        mid = len(current_data) // 2
+        ref = current_data.iloc[:mid]
+        cur = current_data.iloc[mid:]
+        
+        report = Report(metrics=[DataDriftPreset()])
+        report.run(reference_data=ref, current_data=cur)
+        
+        # Return HTML report directly
+        return report.get_html()
+        
+    except Exception as e:
+        return f"<h1>Error generating report: {e}</h1>"
+
+def save_prediction_log(features: list[list[float]], prediction: float):
+    """Log predictions to a local CSV file (Background Task)"""
+    # Flatten features because Evidently expects tabular data
+    # (seq_len * n_features) columns
+    flat_features = [item for sublist in features for item in sublist]
+    
+    row = {
+        "timestamp": datetime.now().isoformat(),
+        "prediction": prediction
+    }
+    # Add feature columns f0, f1...
+    for i, f in enumerate(flat_features):
+        row[f"f{i}"] = f
+        
+    df = pd.DataFrame([row])
+    
+    # Append to file (Note: In Cloud Run, this file is ephemeral and lost on restart)
+    # For production, you would upload this to GCS or BigQuery
+    file_path = "prediction_log.csv"
+    hdr = not os.path.exists(file_path)
+    df.to_csv(file_path, mode='a', header=hdr, index=False)

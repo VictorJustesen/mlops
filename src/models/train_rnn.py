@@ -1,6 +1,8 @@
 import os
 import sys
 from datetime import datetime
+import random
+import subprocess
 
 import hydra
 import numpy as np
@@ -233,6 +235,9 @@ def main(
     seed: int = typer.Option(
         None, "--seed", help="Random seed override for Hydra"
     ),
+    epochs: int = typer.Option(
+        None, "--epochs", help="Epochs override for Hydra"
+    ),
     checkpoint_path: str = typer.Option(
         None,
         "--checkpoint-path",
@@ -241,8 +246,19 @@ def main(
             "Path to checkpoint for resuming/new training"
         ),
     ),
+    sweep: bool = typer.Option(False, "--sweep", help="Run a simple hyperparameter sweep"),
 ):
     """Default command: runs train(). Allows Hydra config overrides via CLI options."""
+
+    if sweep:
+        # Simple random search: runs subprocesses to avoid Hydra re-init issues
+        for i in range(5):
+            lr = 10 ** random.uniform(-4, -2)
+            hidden_size = random.choice([32, 64, 128])
+            print(f"\n--- Sweep Trial {i+1}/5: lr={lr:.5f}, hidden_size={hidden_size} ---")
+            subprocess.run([sys.executable, sys.argv[0], f"--lr={lr}", f"--hidden-size={hidden_size}", "--epochs=1"])
+        return
+
     # Build sys.argv for Hydra overrides
     overrides = []
     if batch_size is not None:
@@ -269,6 +285,8 @@ def main(
         overrides.append(f"data_path={data_path}")
     if seed is not None:
         overrides.append(f"seed={seed}")
+    if epochs is not None:
+        overrides.append(f"epochs={epochs}")
     if checkpoint_path is not None:
         overrides.append(f"checkpoint_path={checkpoint_path}")
     sys.argv = [sys.argv[0]] + overrides
