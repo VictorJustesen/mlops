@@ -283,6 +283,8 @@ However, DVC can be instrumental in cases where you have enourmes amounts of dat
 
 We are utilizing GitHub actions for the continous integration, featuring both workflows for linting and testing. This is forced on pushes and merges that target the main branch. For the operating systems we test the 3 major operating systems; Windows, MacOS and Ubuntu, that should ensure compatibility across most platforms. And for the test we do Python versioning, that tests the Python installation by installing the uv package manager, setting up the environment and runs the basic tests and reporting coverage. Additionally we also implemented the linting workflow, which simply checks linting and formatting utilizing ruff on src and test directories.
 
+An example of our CI workflow can be seen here: [GitHub Actions](https://github.com/VictorJustesen/mlops/actions)
+
 ## Running code and tracking experiments
 
 > In the following section we are interested in learning more about the experimental setup for running your code and
