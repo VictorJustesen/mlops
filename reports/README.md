@@ -218,7 +218,7 @@ We utilized ruff for linting, pep8 for good coding formatting, and mypy for type
 >
 > Answer:
 
---- question 7 fill here ---
+In total we have implemented 12 tests across unit, integration, and performance testing. We have 6 unit tests for data processing and model functionality. We have 3 integration tests for our FastAPI endpoints. Additionally, we implemented 2 load testing tasks using Locust to test API performance under concurrent user load. All these can be found in \test
 
 ### Question 8
 
@@ -233,7 +233,7 @@ We utilized ruff for linting, pep8 for good coding formatting, and mypy for type
 >
 > Answer:
 
---- question 8 fill here ---
+Our code coverage is 24% in the files imported into the test file. The true figure would probably be even lover than 24 if we tested all running code. In production a bigger emphasis should be put on testing, for this we just wanted to show that it works. You can verify this by running "make test_coverage". 
 
 ### Question 9
 
@@ -280,7 +280,13 @@ Yes, we started with utilizing branches, and eventually also included pull reque
 >
 > Answer:
 
---- question 11 fill here ---
+We have set up continuous integration using GitHub Actions with workflows that run on push and pull request events. Our CI pipeline includes linting with ruff to check code formatting and style compliance, and unit testing with pytest to verify data processing, model functionality, and API endpoints work correctly.
+
+Our pre-commit hooks locally enforce the same code quality standards before code is pushed, which helps catch issues early. The GitHub Actions workflow serves as a final safety net to ensure all code merged into main branch maintains quality standards.
+
+An example of our CI workflow can be seen here: [GitHub Actions](https://github.com/VictorJustesen/mlops/actions)
+
+For a production environment, we would add caching for dependencies, test across multiple OS platforms (Windows, macOS, Ubuntu) and Python versions, and include more tests, steps and more. 
 
 ## Running code and tracking experiments
 
@@ -346,8 +352,9 @@ We primarily utilized config files, which means a lot of standard hyperparameter
 >
 > Answer:
 
---- question 15 fill here ---
+For our project we developed a multi-stage Docker setup with two images: one for training and one for API deployment. Both images share a common base that installs dependencies using "uv" and copies the source code. The trainer image includes the data directory and runs the RNN training script, while the API image sets up a FastAPI server that can load models either locally or from GCS.
 
+To run locally: "make train-local" for training or "make deploy-local" for the API . For cloud deployment: "make train-cloud" or "make deploy-cloud" . Our Docker setup uses platform detection to build native images locally and AMD64 images for cloud deployment.
 ### Question 16
 
 > **When running into bugs while trying to run your experiments, how did you perform debugging? Additionally, did you**
