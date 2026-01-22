@@ -1,21 +1,33 @@
 import os
 import sys
+from datetime import datetime
 
 import hydra
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import pytorch_lightning as pl
 import torch
+import typer
 import wandb
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, Dataset
 
+from src.models.rnn import PriceGRU, PriceLSTM, get_default_callbacks
+# Utility to load model from checkpoint
+def load_model(model_class, checkpoint_path):
+    print(f"Loading model from checkpoint: {checkpoint_path}")
+    return model_class.load_from_checkpoint(checkpoint_path)
+
+# Set default seed for reproducibility
+DEFAULT_SEED = 6
+
 sys.path.append(os.getcwd())
-from src.models.rnn import PriceGRU, PriceLSTM
+
+app = typer.Typer(add_completion=False, invoke_without_command=True)
 
 # Optional GCS support
 try:
-    from google.cloud import storage
+    from google.cloud import storage  # noqa: F401
 
     HAS_GCS = True
 except ImportError:
@@ -34,21 +46,49 @@ class SequenceDataset(Dataset):
     PyTorch Dataset for creating sequences from time series data in a CSV file.
     """
 
-    def __init__(self, csv_path, window_size=DEFAULT_WINDOW_SIZE, input_features=None):
+    def __init__(self, csv_paths, window_size=DEFAULT_WINDOW_SIZE, input_features=None):
         """
         Args:
-            csv_path (str): Path to the CSV file.
+            csv_paths (list or str): List of CSV file paths or a single path.
             window_size (int): Number of time steps in each input sequence.
             input_features (list): List of feature column names to use as input.
         """
-        df = pd.read_csv(csv_path, parse_dates=["Date"])
-        self.data = df[input_features].values.astype(np.float32)
-        self.targets = df["Price"].values.astype(np.float32)
+        if isinstance(csv_paths, str):
+            csv_paths = [csv_paths]
+        region_dfs = []
+        for path in csv_paths:
+            region_name = os.path.basename(path).split('_')[0]
+            df = pd.read_csv(path, parse_dates=["Date"])
+            df['region'] = region_name
+            region_dfs.append(df)
+        # Concatenate all regions, keep region column
+        all_df = pd.concat(region_dfs, ignore_index=True)
+        all_df = all_df.sort_values("Date")
+        self.sequences = []
+        self.targets = []
         self.window_size = window_size
+        # Get all unique dates in order
+        unique_dates = all_df['Date'].sort_values().unique()
+        # For each possible window
+        for start_idx in range(len(unique_dates) - window_size):
+            window_dates = unique_dates[start_idx:start_idx+window_size+1]
+            # For each region, extract window if all dates present
+            for region in all_df['region'].unique():
+                region_df = all_df[all_df['region'] == region]
+                region_window = region_df[region_df['Date'].isin(window_dates)]
+                # Only use if window is complete
+                if len(region_window) == window_size + 1:
+                    region_window = region_window.sort_values("Date")
+                    x = region_window[input_features].values[:window_size].astype(np.float32)
+                    y = region_window["Price"].values[window_size].astype(np.float32)
+                    self.sequences.append(torch.tensor(x))
+                    self.targets.append(torch.tensor(y))
+        self.sequences = np.array(self.sequences)
+        self.targets = np.array(self.targets)
 
     def __len__(self):
         """Return the number of samples in the dataset."""
-        return len(self.data) - self.window_size
+        return len(self.sequences)
 
     def __getitem__(self, idx):
         """
@@ -60,155 +100,179 @@ class SequenceDataset(Dataset):
         Returns:
             tuple: (input_sequence, target_value)
         """
-        x = self.data[idx : idx + self.window_size]
-        y = self.targets[idx + self.window_size]
-        return torch.tensor(x), torch.tensor(y)
+        return self.sequences[idx], self.targets[idx]
 
 
 @hydra.main(version_base=None, config_path=".", config_name="rnn_config.yaml")
 def train(cfg: DictConfig):
     """
     Train an RNN model (LSTM/GRU) on a selected region's grouped data using Hydra config.
-    Hydra can be overriden using command line options. e.g. --cfg.model_type=gru --cfg.region=DE
+    Hydra can be overriden using command line options. e.g. --cfg.model_type=gru --cfg.regions=[DE,NP]
 
     Args:
         cfg (DictConfig): Configuration composed by Hydra.
     """
-    print(f"Training {cfg.model_type.upper()} on {cfg.region} grouped data")
+    print(f"Training {cfg.model_type.upper()} on {cfg.regions} grouped data")
     print(OmegaConf.to_yaml(cfg))
 
+    # Set seed for reproducibility
+    seed = cfg.get("seed", DEFAULT_SEED)
+    pl.seed_everything(seed, workers=True)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+
     # Initialize wandb run
-    wandb.init(project="mlops", name=f"{cfg.model_type}_{cfg.region}_rnn", reinit=True)
+    wandb.init(project="mlops", name=f"{cfg.model_type}_{cfg.regions}_rnn", reinit=True)
     wandb.config.update(OmegaConf.to_container(cfg, resolve=True))
 
     window_size = cfg.get("window_size", DEFAULT_WINDOW_SIZE)
     input_features = cfg.get("input_features", DEFAULT_INPUT_FEATURES)
 
-    # Prepare data paths
+    print("Preparing data paths and loading datasets...")
     data_path = cfg.get("data_path", "data/grouped")
     if not os.path.isabs(data_path):
         root_dir = hydra.utils.get_original_cwd()
         data_path = os.path.join(root_dir, data_path)
 
-    print(f"Loading data from: {data_path}")
-    train_csv = os.path.join(data_path, f"{cfg.region}_train.csv")
-    test_csv = os.path.join(data_path, f"{cfg.region}_test.csv")
-
-    if not os.path.exists(train_csv):
-        raise FileNotFoundError(f"Training data not found at {train_csv}")
-
-    train_set = SequenceDataset(train_csv, window_size=window_size, input_features=input_features)
-    test_set = SequenceDataset(test_csv, window_size=window_size, input_features=input_features)
-    train_loader = DataLoader(train_set, batch_size=cfg.batch_size, shuffle=True)
-    test_loader = DataLoader(test_set, batch_size=cfg.batch_size)
+    # Prepare data loaders for multiple regions
+    regions = cfg.get("regions", [cfg.get("region", "DE")])
+    train_csvs = [os.path.join(data_path, f"{region}_train.csv") for region in regions]
+    test_csvs = [os.path.join(data_path, f"{region}_test.csv") for region in regions]
+    print(f"Training CSVs: {train_csvs}")
+    print(f"Test CSVs: {test_csvs}")
+    train_set = SequenceDataset(train_csvs, window_size=window_size, input_features=input_features)
+    test_set = SequenceDataset(test_csvs, window_size=window_size, input_features=input_features)
+    print(f"Number of training samples: {len(train_set)}")
+    print(f"Number of test samples: {len(test_set)}")
+    train_loader = DataLoader(
+        train_set, batch_size=cfg.batch_size, num_workers=7, shuffle=False
+    )  # Make sure shuffle is False.
+    test_loader = DataLoader(test_set, batch_size=cfg.batch_size, num_workers=7)
+    print("Data loaders ready.")
 
     # Model selection
+    checkpoint_path = cfg.get("checkpoint_path", None)
     if cfg.model_type.lower() == "lstm":
-        model = PriceLSTM(
-            input_size=len(input_features), hidden_size=cfg.hidden_size, num_layers=cfg.num_layers
-        ).to(DEVICE)
+        model_class = PriceLSTM
         model_name = "lstm"
     elif cfg.model_type.lower() == "gru":
-        model = PriceGRU(
-            input_size=len(input_features), hidden_size=cfg.hidden_size, num_layers=cfg.num_layers
-        ).to(DEVICE)
+        model_class = PriceGRU
         model_name = "gru"
     else:
         raise ValueError("model_type must be 'lstm' or 'gru'")
 
-    loss_fn = torch.nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=cfg.lr)
-
-    statistics = {"train_loss": [], "test_loss": []}
-
-    for epoch in range(cfg.epochs):
-        model.train()
-        epoch_loss = 0.0
-        total_train_samples = 0
-        # Training loop
-        for i, (x, y) in enumerate(train_loader):
-            x, y = x.to(DEVICE), y.to(DEVICE)
-            optimizer.zero_grad()
-            y_pred = model(x)
-            y = y.unsqueeze(1)  # (batch, 1)
-            loss = loss_fn(y_pred, y)
-            loss.backward()
-            optimizer.step()
-            batch_size = x.size(0)
-            epoch_loss += loss.item() * batch_size
-            total_train_samples += batch_size
-            if i % 100 == 0:
-                print(f"Epoch {epoch}, iter {i}, loss: {loss.item()}")
-        avg_loss = epoch_loss / total_train_samples if total_train_samples > 0 else float("nan")
-        statistics["train_loss"].append(avg_loss)
-
-        # Test set evaluation
-        model.eval()
-        test_loss = 0.0
-        total_test_samples = 0
-        with torch.no_grad():
-            for x, y in test_loader:
-                x, y = x.to(DEVICE), y.to(DEVICE)
-                y_pred = model(x)
-                y = y.unsqueeze(1)
-                loss = loss_fn(y_pred, y)
-                batch_size = x.size(0)
-                test_loss += loss.item() * batch_size
-                total_test_samples += batch_size
-        avg_test_loss = test_loss / total_test_samples if total_test_samples > 0 else float("nan")
-        statistics["test_loss"].append(avg_test_loss)
-        print(f"Epoch {epoch} avg loss: {avg_loss:.6f} | test loss: {avg_test_loss:.6f}")
-        # Log losses to wandb
-        wandb.log({"epoch": epoch, "train_loss": avg_loss, "test_loss": avg_test_loss})
-        model.train()
-
-    print("Training complete")
-    models_dir = os.path.join(os.getcwd(), "models")
-    os.makedirs(models_dir, exist_ok=True)
-    model_path = os.path.join(models_dir, f"model_{model_name}_{cfg.region}.pth")
-    torch.save(model.state_dict(), model_path)
-    print(f"Model saved to {model_path}")
-    wandb.finish()
-
-    # Save training plot
-    plt.figure(figsize=(10, 5))
-    plt.plot(statistics["train_loss"], label="Train loss")
-    plt.plot(statistics["test_loss"], label="Test loss")
-    plt.title(f"Train/Test loss (MSE) - {cfg.model_type.upper()} {cfg.region}")
-    plt.xlabel("Epoch")
-    plt.ylabel("Loss")
-    plt.legend()
-    plt.tight_layout()
-    plot_path = os.path.join(models_dir, f"training_statistics_{model_name}_{cfg.region}.png")
-    plt.savefig(plot_path)
-    print(f"Training plot saved to {plot_path}")
-
-    # Optional: Upload to GCS if configured
-    gcs_bucket = os.environ.get("GCS_MODEL_BUCKET")
-    gcs_path = os.environ.get("GCS_MODEL_PATH", "models")
-
-    if gcs_bucket and HAS_GCS:
-        try:
-            print(f"Uploading model to GCS: gs://{gcs_bucket}/{gcs_path}/")
-            client = storage.Client()
-            bucket = client.bucket(gcs_bucket)
-
-            # Upload model file
-            blob = bucket.blob(f"{gcs_path}/model_{model_name}_{cfg.region}.pth")
-            blob.upload_from_filename(model_path)
-            print(f"Uploaded {model_path} to gs://{gcs_bucket}/{gcs_path}/")
-
-            # Upload training plot
-            plot_blob = bucket.blob(f"{gcs_path}/training_statistics_{model_name}_{cfg.region}.png")
-            plot_blob.upload_from_filename(plot_path)
-            print(f"Uploaded {plot_path} to gs://{gcs_bucket}/{gcs_path}/")
-        except Exception as e:
-            print(f"Warning: Could not upload to GCS: {e}")
-    elif gcs_bucket and not HAS_GCS:
-        print("Warning: GCS_MODEL_BUCKET set but google-cloud-storage not installed")
+    if checkpoint_path:
+        print(f"Loading model from checkpoint: {checkpoint_path}")
+        model = load_model(model_class, checkpoint_path)
     else:
-        print("GCS upload skipped (GCS_MODEL_BUCKET not set)")
+        print("Initializing new model instance...")
+        model = model_class(
+            input_size=len(input_features),
+            hidden_size=cfg.hidden_size,
+            num_layers=cfg.num_layers,
+            dropout=cfg.dropout,
+            lr=cfg.lr,
+        )
+
+    print("Setting up PyTorch Lightning Trainer...")
+    callbacks = get_default_callbacks()
+    trainer = pl.Trainer(
+        max_epochs=cfg.epochs,
+        accelerator="gpu" if torch.cuda.is_available() else "cpu",
+        callbacks=callbacks,
+        logger=pl.loggers.WandbLogger(
+            project="mlops", name=f"{cfg.model_type}_{cfg.regions}_rnn", reinit=True
+        ),
+    )
+
+    print("Starting model training...")
+    trainer.fit(model, train_loader, test_loader)
+    print("Training complete.")
+
+    # Save model checkpoint in 'models' directory at repo root
+    print("Saving model checkpoint...")
+    models_dir = os.path.join(hydra.utils.get_original_cwd(), "models")
+    os.makedirs(models_dir, exist_ok=True)
+    timestamp = datetime.now().strftime("%H%M")
+    checkpoint_path = os.path.join(models_dir, f"model_{model_name}_{timestamp}.ckpt")
+    trainer.save_checkpoint(checkpoint_path)
+    print(f"Model checkpoint saved to {checkpoint_path}")
+    wandb.finish()
+    print("wandb run finished.")
+
+
+@app.callback()
+def main(
+    batch_size: int = typer.Option(
+        None, "--batch-size", "--batch_size", help="Batch size override for Hydra"
+    ),
+    dropout: float = typer.Option(
+        None, "--dropout", help="Dropout override for Hydra"
+    ),
+    hidden_size: int = typer.Option(
+        None, "--hidden-size", "--hidden_size", help="Hidden size override for Hydra"
+    ),
+    lr: float = typer.Option(None, "--lr", help="Learning rate override for Hydra"),
+    model_type: str = typer.Option(
+        None, "--model-type", "--model_type", help="Model type override for Hydra"
+    ),
+    regions: str = typer.Option(
+        None, "--regions", help="Comma-separated list of regions to train on"
+    ),
+    num_layers: int = typer.Option(
+        None, "--num-layers", "--num_layers", help="Num layers override for Hydra"
+    ),
+    data_path: str = typer.Option(
+        None, "--data-path", "--data_path", help="Data path override for Hydra"
+    ),
+    seed: int = typer.Option(
+        None, "--seed", help="Random seed override for Hydra"
+    ),
+    checkpoint_path: str = typer.Option(
+        None,
+        "--checkpoint-path",
+        "--checkpoint_path",
+        help=(
+            "Path to checkpoint for resuming/new training"
+        ),
+    ),
+):
+    """Default command: runs train(). Allows Hydra config overrides via CLI options."""
+    # Build sys.argv for Hydra overrides
+    overrides = []
+    if batch_size is not None:
+        overrides.append(f"batch_size={batch_size}")
+    if dropout is not None:
+        overrides.append(f"dropout={dropout}")
+    if hidden_size is not None:
+        overrides.append(f"hidden_size={hidden_size}")
+    if lr is not None:
+        overrides.append(f"lr={lr}")
+    if model_type is not None:
+        overrides.append(f"model_type={model_type}")
+    if regions is not None:
+        # Accept comma-separated or bracketed regions from CLI
+        if regions.startswith("[") and regions.endswith("]"):
+            # Remove brackets and split
+            region_list = [r.strip().strip('"\'') for r in regions[1:-1].split(",")]
+        else:
+            region_list = [r.strip() for r in regions.split(",")]
+        overrides.append(f"regions={region_list}")
+    if num_layers is not None:
+        overrides.append(f"num_layers={num_layers}")
+    if data_path is not None:
+        overrides.append(f"data_path={data_path}")
+    if seed is not None:
+        overrides.append(f"seed={seed}")
+    if checkpoint_path is not None:
+        overrides.append(f"checkpoint_path={checkpoint_path}")
+    sys.argv = [sys.argv[0]] + overrides
+    train()
 
 
 if __name__ == "__main__":
-    train()
+    app()
+
+

@@ -1,13 +1,16 @@
-model_type: "lstm"   # Options: "lstm" or "gru"
-region: "DE"         # Options: NP, FR, BE, DE, PJM
-window_size: 168     # Sequence length (hours)
-input_features:
+model_type: "lstm"         # Options: "lstm" or "gru"
+regions:
+  - "DE"                   # List of regions to train on. Options: NP, FR, BE, DE, PJM
+window_size: 168           # Sequence length (hours)
+input_features:            # Input features can be changed - But should match the data preprocessing
   - "Price"
   - "Load"
   - "Production"
-lr: 0.001            # Learning rate
-batch_size: 32       # Batch size
-epochs: 3           # Number of training epochs
-hidden_size: 64      # RNN hidden size
-num_layers: 2        # Number of RNN layers
-data_path: "data/grouped" # Path to data directory (can be /gcs/bucket/path)
+lr: 0.001                  # Learning rate
+batch_size: 32             # Batch size
+epochs: 3                  # Number of training epochs
+hidden_size: 64            # RNN hidden size
+num_layers: 2              # Number of RNN layers
+dropout: 0.1               # Dropout rate for RNN layers
+data_path: "data/grouped"  # Path to data directory (can be /gcs/bucket/path)
+seed: 6                    # Random seed for reproducibility

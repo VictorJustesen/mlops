@@ -95,6 +95,12 @@ target/
 # Hydracore cache
 outputs/
 
+# wandb logs
+wandb/
+
+# Other log checkpoints?
+mlops/
+
 # models
 model_gru_FR.pth
 model_lstm_FR.pth
@@ -116,3 +122,13 @@ training_statistics_gru_NP.png
 training_statistics_lstm_NP.png
 training_statistics_gru_PJM.png
 training_statistics_lstm_PJM.png
+model_gru_FR.ckpt
+model_lstm_FR.ckpt
+model_gru_DE.ckpt
+model_lstm_DE.ckpt
+model_gru_BE.ckpt
+model_lstm_BE.ckpt
+model_gru_NP.ckpt
+model_lstm_NP.ckpt
+model_gru_PJM.ckpt
+model_lstm_PJM.ckpt

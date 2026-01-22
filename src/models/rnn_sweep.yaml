@@ -1,0 +1,28 @@
+# wandb sweep configuration for RNN hyperparameter search (LSTM & GRU)
+program: uv
+method: bayes
+metric:
+  name: val_loss
+  goal: minimize
+parameters:
+  model_type:
+    values: ["lstm", "gru"]
+  lr:
+    distribution: uniform
+    min: 0.0001
+    max: 0.01
+  hidden_size:
+    values: [32, 64, 128, 256]
+  num_layers:
+    values: [1, 2, 3, 4, 5]
+  batch_size:
+    values: [16, 32, 64, 128]
+  dropout:
+    distribution: uniform
+    min: 0.0
+    max: 0.5
+command:
+  - uv
+  - run
+  - train_rnn
+  - ${args}

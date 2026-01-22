@@ -13,8 +13,8 @@ dependencies = [
     "scikit-learn>=1.8.0",
     "uv>=0.9.22",
     "xgboost>=3.1.2",
-    "torch>=2.5.0",
-    "torchvision>=0.20.0",
+    "torch>=2.9.1",
+    "torchvision>=0.18.0",
     "typer>=0.9.0",
     "matplotlib>=3.10.8",
     "loguru>=0.7.3",
@@ -33,6 +33,9 @@ dependencies = [
     "fastapi>=0.115.0",
     "markdown>=3.10",
     "pre-commit>=4.0.0",
+    "pytorch-lightning>=2.6.0",
+    "mypy>=1.19.1",
+    "evidently>=0.7.20",
 ]
 
 
@@ -43,15 +46,21 @@ torch = [
 torchvision = [
     { index = "pytorch-cpu", marker = "platform_system != 'Darwin'" },
 ]
+mlops = { workspace = true, editable = true }
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
+[tool.uv.workspace]
+members = [
+    ".",
+]
+
 [project.scripts]
 make_data = "src.data.make_dataset:main"
-train_rnn = "src.models.train_rnn:train"
+train_rnn = "src.models.train_rnn:app"
 rnn_data = "src.features.rnn_data:main"
 
 [tool.uv]
@@ -85,3 +94,8 @@ line-ending = "auto"
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "mlops",
+]
