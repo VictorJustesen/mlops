@@ -1,5 +1,6 @@
 import os
 import sys
+from datetime import datetime
 
 import hydra
 import numpy as np
@@ -194,7 +195,6 @@ def train(cfg: DictConfig):
     print("Saving model checkpoint...")
     models_dir = os.path.join(hydra.utils.get_original_cwd(), "models")
     os.makedirs(models_dir, exist_ok=True)
-    from datetime import datetime
     timestamp = datetime.now().strftime("%H%M")
     checkpoint_path = os.path.join(models_dir, f"model_{model_name}_{timestamp}.ckpt")
     trainer.save_checkpoint(checkpoint_path)
