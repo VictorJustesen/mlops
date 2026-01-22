@@ -6,7 +6,7 @@ metric:
   goal: minimize
 parameters:
   model_type:
-    values: ["lstm", "gru"]
+    values: ["lstm"]
   lr:
     distribution: uniform
     min: 0.0001
