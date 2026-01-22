@@ -17,8 +17,14 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Install pre-commit
-        run: pip install pre-commit
+      - name: Install pre-commit, ruff, and mypy
+        run: pip install pre-commit ruff mypy
 
       - name: Run pre-commit
         run: pre-commit run --all-files
+
+      - name: Run ruff
+        run: ruff src/ tests/
+
+      - name: Run mypy
+        run: mypy src/ tests/

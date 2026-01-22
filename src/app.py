@@ -24,8 +24,10 @@ DEVICE = torch.device(
     "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 )
 
-model = None
-model_info = {}
+from typing import Union, Dict, Any
+
+model: Union[PriceLSTM, PriceGRU, None] = None
+model_info: Dict[str, Any] = {}
 
 
 def download_model_from_gcs(bucket_name, gcs_path, local_dir="models"):
@@ -123,6 +125,7 @@ async def lifespan(app: FastAPI):
             )
 
         # Create and load model
+
         if model_type == "lstm":
             model = PriceLSTM(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers)
         elif model_type == "gru":
@@ -131,8 +134,11 @@ async def lifespan(app: FastAPI):
             raise ValueError(f"Unknown model_type: {model_type}. Must be 'lstm' or 'gru'")
 
         state_dict = torch.load(model_path, map_location=DEVICE)
-        model.load_state_dict(state_dict)
-        model.eval()
+        if model is not None:
+            model.load_state_dict(state_dict)
+            model.eval()
+        else:
+            raise RuntimeError("Model was not initialized correctly.")
 
         # Only set model_info AFTER successful load
         model_info = {

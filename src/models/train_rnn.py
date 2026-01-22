@@ -13,6 +13,7 @@ from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, Dataset
 
 from src.models.rnn import PriceGRU, PriceLSTM, get_default_callbacks
+from typing import Type, Union
 # Utility to load model from checkpoint
 def load_model(model_class, checkpoint_path):
     print(f"Loading model from checkpoint: {checkpoint_path}")
@@ -154,6 +155,8 @@ def train(cfg: DictConfig):
 
     # Model selection
     checkpoint_path = cfg.get("checkpoint_path", None)
+
+    model_class: Type[Union[PriceLSTM, PriceGRU]]
     if cfg.model_type.lower() == "lstm":
         model_class = PriceLSTM
         model_name = "lstm"

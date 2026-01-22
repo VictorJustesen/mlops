@@ -199,7 +199,7 @@ Our cookiecutter template has a few changes from the primary cookiecutter templa
 >
 > Answer:
 
-We utilized ruff for linting, pep8 for good coding formatting, and mypy for type checking. Especially in larger projects, it can be important to understand how code works and interacts, especially when a new colleague comes in, or a dusty function has to be updated, so that you don't spend 20 hours thinking "What the ..."
+We utilized ruff for linting and coding formatting, and mypy for type checking. Especially in larger projects, it can be important to understand how code works and interacts. Good linting, formatting and type checking, helps make sure the managable to understand. This can be especially helpful when collaborating, to reduce the amount of time others have to spend thinking "How the...", when integrating or reiterating another script.
 
 ## Version control
 
