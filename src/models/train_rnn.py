@@ -265,9 +265,17 @@ def train(cfg: DictConfig):
     models_dir = os.path.join(hydra.utils.get_original_cwd(), "models")
     os.makedirs(models_dir, exist_ok=True)
     timestamp = datetime.now().strftime("%H%M")
+    
+    # Keep the Lightning checkpoint (good for resuming training)
     checkpoint_path = os.path.join(models_dir, f"model_{model_name}_{timestamp}.ckpt")
     trainer.save_checkpoint(checkpoint_path)
     print(f"Model checkpoint saved to {checkpoint_path}")
+
+    # ADD THIS: Save as .pth (state_dict only) for the API
+    pth_path = os.path.join(models_dir, f"model_{model_name}_{timestamp}.pth")
+    torch.save(model.state_dict(), pth_path)
+    print(f"API-ready model saved to {pth_path}")
+
     if isinstance(logger, pl.loggers.WandbLogger):
         wandb.finish()
         print("wandb run finished.")
