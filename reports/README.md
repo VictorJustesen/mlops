@@ -98,8 +98,8 @@ will check the repositories and the code to verify your answers.
 ### Week 3
 
 * [x] Check how robust your model is towards data drifting (M27)
-* [ ] Setup collection of input-output data from your deployed application (M27)
-* [ ] Deploy to the cloud a drift detection API (M27)
+* [x] Setup collection of input-output data from your deployed application (M27)
+* [x] Deploy to the cloud a drift detection API (M27)
 * [x] Instrument your API with a couple of system metrics (M28)
 * [x] Setup cloud monitoring of your instrumented application (M28)
 * [x] Create one or more alert systems in GCP to alert you if your app is not behaving correctly (M28)
@@ -110,7 +110,7 @@ will check the repositories and the code to verify your answers.
 ### Extra
 
 * [x] Write some documentation for your application (M32)
-* [x] Publish the documentation to GitHub Pages (M32)
+* [ ] Publish the documentation to GitHub Pages (M32)
 * [x] Revisit your initial project description. Did the project turn out as you wanted?
 * [ ] Create an architectural diagram over your MLOps pipeline
 * [x] Make sure all group members have an understanding about all parts of the project
@@ -148,7 +148,7 @@ s234870, s234868, s225181, s225676, s224276
 >
 > Answer:
 
---- question 3 fill here ---
+We used Xgboost, as a early and easy model to train and test.
 
 ## Coding environment
 
@@ -502,8 +502,10 @@ If this was a production setting we would add authentication and logging to the 
 >
 > Answer:
 
---- question 25 fill here ---
 
+We performed comprehensive testing including unit, integration, and load testing. For unit testing, we used "pytest" to verify the integrity of our data processing functions and the model architecture itself, ensuring that tensor shapes and data splits were correct. We also implemented integration tests specifically for our FastAPI endpoints to guarantee they correctly validated inputs and returned predictions in the expected format.
+
+For load testing, we utilized Locust to simulate concurrent user traffic against our deployed API. We configured a "locustfile" to generate random input data and send POST requests to our "/predict" endpoint. The results of the load testing were very positive, due to the simple and efficient design of our model and the lightweight nature of FastAPI, the service was able to handle a nice amount of concurrent users with low latency.
 ### Question 26
 
 > **Did you manage to implement monitoring of your deployed model? If yes, explain how it works. If not, explain how**
@@ -593,7 +595,10 @@ As mentioned by the question we also implemented a evidently drift detection sys
 >
 > Answer:
 
---- question 30 fill here ---
+
+It can sometimes be tricky to work with DevOps since it is often harder to debug than "regular code." We also faced challenges with the enforcement of code style, specifically, our pre-commit hooks caused problems when pushing, sometimes getting stuck in loops. This was frustrating, as strict code style did not feel like a priority compared to functionality.
+
+It can be discouraging to work extensively on infrastructure tasks that do not seemingly generate immediate value for the model. However, we do recognize that in a larger project or a professional setting, these practices would certainly create value by ensuring a maintainable and consistent codebase.
 
 ### Question 31
 
@@ -610,5 +615,5 @@ As mentioned by the question we also implemented a evidently drift detection sys
 > *All members contributed to code by...*
 > *We have used ChatGPT to help debug our code. Additionally, we used GitHub Copilot to help write some of our code.*
 > Answer:
-
+We all worked equally on the project, some more architectually, some more as builders. 
 We confirm that during the project we have utilized generative AI for this project, such as GitHub Copilot, as recommended in the course material. The tasks for which AI was utilized ranged from research to troubleshooting, to clarifications.
