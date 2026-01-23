@@ -1,29 +1,29 @@
 import os
-import sys
-from datetime import datetime
 import random
 import subprocess
+import sys
+from datetime import datetime
+from typing import Any, Type, Union
 
 import hydra
 import numpy as np
 import pandas as pd
 import pytorch_lightning as pl
 import torch
- 
 import typer
 import wandb
 from omegaconf import DictConfig, OmegaConf
+from pytorch_lightning.profilers import AdvancedProfiler, SimpleProfiler
 from torch.utils.data import DataLoader, Dataset
 
-from pytorch_lightning.profilers import SimpleProfiler, AdvancedProfiler, PyTorchProfiler
-from pytorch_lightning.loggers import TensorBoardLogger
-
 from src.models.rnn import PriceGRU, PriceLSTM, get_default_callbacks
-from typing import Type, Union
+
+
 # Utility to load model from checkpoint
 def load_model(model_class, checkpoint_path):
     print(f"Loading model from checkpoint: {checkpoint_path}")
     return model_class.load_from_checkpoint(checkpoint_path)
+
 
 # Set default seed for reproducibility
 DEFAULT_SEED = 6
@@ -65,9 +65,9 @@ class SequenceDataset(Dataset):
             csv_paths = [csv_paths]
         region_dfs = []
         for path in csv_paths:
-            region_name = os.path.basename(path).split('_')[0]
+            region_name = os.path.basename(path).split("_")[0]
             df = pd.read_csv(path, parse_dates=["Date"])
-            df['region'] = region_name
+            df["region"] = region_name
             region_dfs.append(df)
         # Concatenate all regions, keep region column
         all_df = pd.concat(region_dfs, ignore_index=True)
@@ -76,14 +76,14 @@ class SequenceDataset(Dataset):
         self.targets = []
         self.window_size = window_size
         # Get all unique dates in order
-        unique_dates = all_df['Date'].sort_values().unique()
+        unique_dates = all_df["Date"].sort_values().unique()
         # For each possible window
         for start_idx in range(len(unique_dates) - window_size):
-            window_dates = unique_dates[start_idx:start_idx+window_size+1]
+            window_dates = unique_dates[start_idx : start_idx + window_size + 1]
             # For each region, extract window if all dates present
-            for region in all_df['region'].unique():
-                region_df = all_df[all_df['region'] == region]
-                region_window = region_df[region_df['Date'].isin(window_dates)]
+            for region in all_df["region"].unique():
+                region_df = all_df[all_df["region"] == region]
+                region_window = region_df[region_df["Date"].isin(window_dates)]
                 # Only use if window is complete
                 if len(region_window) == window_size + 1:
                     region_window = region_window.sort_values("Date")
@@ -132,7 +132,14 @@ def train(cfg: DictConfig):
         torch.cuda.manual_seed_all(seed)
 
     # Initialize wandb run
-    wandb.init(project="mlops", name=f"{cfg.model_type}_{cfg.regions}_rnn", reinit=True)
+    try:
+        wandb.init(project="mlops", name=f"{cfg.model_type}_{cfg.regions}_rnn", reinit=True)
+    except Exception as e:
+        print(f"Warning: WandB failed to initialize ({e}). Falling back to offline mode.")
+        wandb.init(
+            project="mlops", name=f"{cfg.model_type}_{cfg.regions}_rnn", reinit=True, mode="offline"
+        )
+
     wandb.config.update(OmegaConf.to_container(cfg, resolve=True))
 
     window_size = cfg.get("window_size", DEFAULT_WINDOW_SIZE)
@@ -188,14 +195,20 @@ def train(cfg: DictConfig):
 
     print("Setting up PyTorch Lightning Trainer...")
     callbacks = get_default_callbacks()
-    profiler_type = getattr(cfg, 'profiler_type', 'simple')
-    logger = pl.loggers.WandbLogger(
-        project="mlops", name=f"{cfg.model_type}_{cfg.regions}_rnn", reinit=True
-    )
-    profiler = None
-    if profiler_type == 'advanced':
+    profiler_type = getattr(cfg, "profiler_type", "simple")
+    logger: Any
+    try:
+        logger = pl.loggers.WandbLogger(
+            project="mlops", name=f"{cfg.model_type}_{cfg.regions}_rnn", reinit=True
+        )
+    except Exception as e:
+        print(f"Warning: Failed to initialize WandB logger. Proceeding without it. Error: {e}")
+        logger = True  # Fallback to default logger
+
+    profiler: Any = None
+    if profiler_type == "advanced":
         profiler = AdvancedProfiler()
-    elif profiler_type == 'simple':
+    elif profiler_type == "simple":
         profiler = SimpleProfiler()
     # If profiler_type is 'none', profiler remains None
     trainer = pl.Trainer(
@@ -218,8 +231,9 @@ def train(cfg: DictConfig):
     checkpoint_path = os.path.join(models_dir, f"model_{model_name}_{timestamp}.ckpt")
     trainer.save_checkpoint(checkpoint_path)
     print(f"Model checkpoint saved to {checkpoint_path}")
-    wandb.finish()
-    print("wandb run finished.")
+    if isinstance(logger, pl.loggers.WandbLogger):
+        wandb.finish()
+        print("wandb run finished.")
 
 
 @app.callback()
@@ -227,9 +241,7 @@ def main(
     batch_size: int = typer.Option(
         None, "--batch-size", "--batch_size", help="Batch size override for Hydra"
     ),
-    dropout: float = typer.Option(
-        None, "--dropout", help="Dropout override for Hydra"
-    ),
+    dropout: float = typer.Option(None, "--dropout", help="Dropout override for Hydra"),
     hidden_size: int = typer.Option(
         None, "--hidden-size", "--hidden_size", help="Hidden size override for Hydra"
     ),
@@ -246,23 +258,19 @@ def main(
     data_path: str = typer.Option(
         None, "--data-path", "--data_path", help="Data path override for Hydra"
     ),
-    seed: int = typer.Option(
-        None, "--seed", help="Random seed override for Hydra"
-    ),
-    epochs: int = typer.Option(
-        None, "--epochs", help="Epochs override for Hydra"
-    ),
+    seed: int = typer.Option(None, "--seed", help="Random seed override for Hydra"),
+    epochs: int = typer.Option(None, "--epochs", help="Epochs override for Hydra"),
     checkpoint_path: str = typer.Option(
         None,
         "--checkpoint-path",
         "--checkpoint_path",
-        help=(
-            "Path to checkpoint for resuming/new training"
-        ),
+        help=("Path to checkpoint for resuming/new training"),
     ),
     sweep: bool = typer.Option(False, "--sweep", help="Run a simple hyperparameter sweep"),
     profiler_type: str = typer.Option(
-        "simple", "--profiler-type", help="Profiler type: 'simple', 'advanced', 'pytorch', or 'none'"
+        "simple",
+        "--profiler-type",
+        help="Profiler type: 'simple', 'advanced', 'pytorch', or 'none'",
     ),
 ):
     """Default command: runs train(). Allows Hydra config overrides via CLI options."""
@@ -272,8 +280,16 @@ def main(
         for i in range(5):
             lr = 10 ** random.uniform(-4, -2)
             hidden_size = random.choice([32, 64, 128])
-            print(f"\n--- Sweep Trial {i+1}/5: lr={lr:.5f}, hidden_size={hidden_size} ---")
-            subprocess.run([sys.executable, sys.argv[0], f"--lr={lr}", f"--hidden-size={hidden_size}", "--epochs=1"])
+            print(f"\n--- Sweep Trial {i + 1}/5: lr={lr:.5f}, hidden_size={hidden_size} ---")
+            subprocess.run(
+                [
+                    sys.executable,
+                    sys.argv[0],
+                    f"--lr={lr}",
+                    f"--hidden-size={hidden_size}",
+                    "--epochs=1",
+                ]
+            )
         return
 
     # Build sys.argv for Hydra overrides
@@ -292,7 +308,7 @@ def main(
         # Accept comma-separated or bracketed regions from CLI
         if regions.startswith("[") and regions.endswith("]"):
             # Remove brackets and split
-            region_list = [r.strip().strip('"\'') for r in regions[1:-1].split(",")]
+            region_list = [r.strip().strip("\"'") for r in regions[1:-1].split(",")]
         else:
             region_list = [r.strip() for r in regions.split(",")]
         overrides.append(f"regions={region_list}")
@@ -314,5 +330,3 @@ def main(
 
 if __name__ == "__main__":
     app()
-
-

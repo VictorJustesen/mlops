@@ -107,7 +107,7 @@ lint_all:
 	uv run ruff check src/ tests/
 	uv run ruff format --check src/ tests/
 
-check: pre-commit-run lint_all test_coverage
+check: pre-commit-run lint_all test_coverage format
 
 ## Install pre-commit hooks
 pre-commit-install:
@@ -145,6 +145,7 @@ train-local: build-local
 	docker run --rm \
 		-v $(PWD)/models:/app/models \
 		-v $(PWD)/data:/app/data \
+		-e WANDB_API_KEY \
 		$(IMAGE_TRAINER):local
 
 ## Deploy API locally (uses local models/ folder)

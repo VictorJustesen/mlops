@@ -100,8 +100,8 @@ will check the repositories and the code to verify your answers.
 * [x] Check how robust your model is towards data drifting (M27)
 * [ ] Setup collection of input-output data from your deployed application (M27)
 * [ ] Deploy to the cloud a drift detection API (M27)
-* [ ] Instrument your API with a couple of system metrics (M28)
-* [ ] Setup cloud monitoring of your instrumented application (M28)
+* [x] Instrument your API with a couple of system metrics (M28)
+* [x] Setup cloud monitoring of your instrumented application (M28)
 * [x] Create one or more alert systems in GCP to alert you if your app is not behaving correctly (M28)
 * [ ] If applicable, optimize the performance of your data loading using distributed data loading (M29)
 * [ ] If applicable, optimize the performance of your training pipeline by using distributed training (M30)
@@ -516,9 +516,9 @@ If this was a production setting we would add authentication and logging to the 
 >
 > Answer:
 
-We implemented basic monitoring and alerting for our deployed API. Cloud Run automatically provides monitoring dashboards that track request counts, response times, error rates, and resource usage (CPU/memory). We set up email alerts through GCP Cloud Monitoring that notify us whenever the API returns 5xx errors, so we get immediately informed if something breaks in production.
+We implemented monitoring for our deployed API using a combination of GCP's native tools and custom instrumentation. Cloud Run automatically provides monitoring dashboards that track request counts, response times, and resource usage. We also set up email alerts in GCP to notify us of 5xx errors.
 
-For a more robust production system, we would add custom monitoring to track model-specific metrics like prediction distributions, input data statistics, and inference times. We would also implement data drift detection to monitor if the input data distribution changes over time, which could degrade model performance. This would require collecting and storing prediction inputs over time, which we didn't implement in this project.
+Additionally, we instrumented our FastAPI application using `prometheus-fastapi-instrumentator`, exposing a `/metrics` endpoint that provides detailed system metrics scrapeable by Prometheus. For model performance monitoring, we implemented a `/monitoring` endpoint using Evidently AI to generate data drift reports. This allows us to detect if the input data distribution is shifting (drift).
 
 ## Overall discussion of project
 
