@@ -317,7 +317,7 @@ We have made use of both hydra config files, which allows us to maintain a 'stan
 >
 > Answer:
 
-We ensured reproducibility by utilizing the Hydra config files to manage the experiment hyperparameters and settings, each experiment run is fully defined by config file, whih gets logged locally (and to wandb) for tracking. Users can reproduce any experiment by utilizing an identical config file, and/or command-line overrides. Additionally we set a standard seed in the config. Furthermore pytorch Lightning is used in the training, which saves model checkpoints, including all hyperparameters, which in addition to wandb tracking, that logs configs, metrics and artifacts, can be recreated either utilizing logs, checkpoints or config files.
+We ensured reproducibility by utilizing the Hydra config files to manage the experiment hyper parameters and settings, each experiment run is fully defined by config file, whih gets logged locally (and to wandb) for tracking. Users can reproduce any experiment by utilizing an identical config file, and/or command line overrides. Additionally we set a standard seed in the config. Furthermore pytorch Lightning is used in the training, which saves model checkpoints, including all hyperparameters, which in addition to wandb tracking, that logs configs, metrics and artifacts, can be recreated either utilizing logs, checkpoints or config files, ensuring nothing is lost.
 
 ### Question 14
 
@@ -521,7 +521,7 @@ For load testing, we utilized Locust to simulate concurrent user traffic against
 
 We implemented monitoring for our deployed API using a combination of GCP's native tools and custom instrumentation. Cloud Run automatically provides monitoring dashboards that track request counts, response times, and resource usage. We also set up email alerts in GCP to notify us of 5xx errors.
 
-Additionally, we instrumented our FastAPI application using `prometheus-fastapi-instrumentator`, exposing a `/metrics` endpoint that provides detailed system metrics scrapeable by Prometheus. For model performance monitoring, we implemented a `/monitoring` endpoint using Evidently AI to generate data drift reports. This allows us to detect if the input data distribution is shifting (drift).
+Additionally, we instrumented our FastAPI application using `prometheus-fastapi-instrumentator`, exposing a `/metrics` endpoint that provides detailed system metrics scrapeable by Prometheus. For model performance monitoring, we implemented a `/monitoring` endpoint using Evidently AI to generate data drift reports. This assumes we save apit (which we do). This allows us to detect if the input data distribution is shifting (drift). 
 
 ## Overall discussion of project
 
