@@ -6,9 +6,9 @@ workerPoolSpecs:
     imageUri: gcr.io/dtumlops-484812/rnn-trainer:latest
     command: ["uv", "run", "python", "-u", "src/models/train_rnn.py"]
     args:
-    - model_type=lstm
-    - epochs=5
-    - data_path=/gcs/mlops-dataset-84636/data/grouped
+    - --model-type=lstm
+    - --epochs=5
+    - --data-path=/gcs/mlops-dataset-84636/data/grouped
     env:
     - name: GCS_MODEL_BUCKET
       value: mlops-dataset-84636

@@ -62,7 +62,7 @@ will check the repositories and the code to verify your answers.
     `pyproject.toml`/`uv.lock` up-to-date with whatever dependencies that you are using (M2+M6)
 * [x] Remember to comply with good coding practices (`pep8`) while doing the project (M7)
 * [x] Do a bit of code typing and remember to document essential parts of your code (M7)
-* [ ] Setup version control for your data or part of your data (M8)
+* [x] Setup version control for your data or part of your data (M8)
 * [x] Add command line interfaces and project commands to your code where it makes sense (M9)
 * [x] Construct one or multiple docker files for your code (M10)
 * [x] Build the docker files locally and make sure they work as intended (M10)
@@ -615,5 +615,5 @@ It can be discouraging to work extensively on infrastructure tasks that do not s
 > *All members contributed to code by...*
 > *We have used ChatGPT to help debug our code. Additionally, we used GitHub Copilot to help write some of our code.*
 > Answer:
-We all worked equally on the project, some more architectually, some more as builders. 
+We all worked equally on the project, some more architectually, some more as builders.
 We confirm that during the project we have utilized generative AI for this project, such as GitHub Copilot, as recommended in the course material. The tasks for which AI was utilized ranged from research to troubleshooting, to clarifications.
