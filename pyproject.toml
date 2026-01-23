@@ -68,6 +68,7 @@ make_data = "src.data.make_dataset:main"
 train_rnn = "src.models.train_rnn:app"
 rnn_data = "src.features.rnn_data:main"
 
+
 [tool.uv]
 package = true
 required-environments = [

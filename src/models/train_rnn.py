@@ -115,6 +115,24 @@ class SequenceDataset(Dataset):
 def train(cfg: DictConfig):
     """
     Train an RNN model (LSTM/GRU) on a selected region's grouped data using Hydra config.
+            Default command: runs train(). Allows Hydra config overrides via CLI options.
+
+            CLI Suboptions:
+                --batch-size: (int) Override batch size for training.
+                --dropout: (float) Override dropout rate for the model.
+                --hidden-size: (int) Override hidden layer size for the RNN.
+                --lr: (float) Override learning rate for the optimizer.
+                --model-type: (str) Model type to use ('lstm' or 'gru').
+                --regions: (str) Comma-separated list or bracketed list of regions to train on (e.g., "DE,NP" or "[DE,NP]").
+                --num-layers: (int) Override the number of RNN layers.
+                --data-path: (str) Path to the grouped data directory.
+                --seed: (int) Override the random seed for reproducibility.
+                --epochs: (int) Override the number of training epochs.
+                --checkpoint-path: (str) Path to a model checkpoint to resume or initialize training.
+                --sweep: (bool) If set, runs a simple random hyperparameter sweep (5 trials).
+                --profiler-type: (str) Profiler type for PyTorch Lightning ('simple', 'advanced', 'pytorch', or 'none').
+
+            These options override the corresponding values in the Hydra config file (rnn_config.yaml).
     Hydra can be overriden using command line options. e.g. --cfg.model_type=gru --cfg.regions=[DE,NP]
 
     Args:
@@ -307,7 +325,7 @@ def main(
     if checkpoint_path is not None:
         overrides.append(f"checkpoint_path={checkpoint_path}")
     if profiler_type is not None:
-        overrides.append(f"profiler_type={profiler_type}")
+        overrides.append(f"profiler_type={profiler_type}") # simple or advanced, provides in terminal profile from training loop
     sys.argv = [sys.argv[0]] + overrides
     train()
 
