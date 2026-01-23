@@ -204,5 +204,34 @@ def pairwise_cli(
     )
 
 
+
+# Add a main function for CLI entry point
+
+def main():
+    """
+    Entry point for CLI usage with Typer.
+    If no CLI arguments are passed, run pairwise_drift_inspector for all regions in the data folder.
+    """
+    import sys
+    if len(sys.argv) == 1:
+        # No CLI arguments: run pairwise_drift_inspector for all regions in data/grouped
+        data_path = "data/grouped"
+        output_dir = "data/drift"
+        window_size = 168
+        input_features = ["Price", "Load", "Production"]
+        # Find all *_train.csv files
+        regions = [f.split("_train.csv")[0] for f in os.listdir(data_path) if f.endswith("_train.csv")]
+        for region in regions:
+            print(f"Running pairwise drift for region: {region}")
+            pairwise_drift_inspector(
+                target_region=region,
+                data_path=data_path,
+                output_dir=output_dir,
+                window_size=window_size,
+                input_features=input_features,
+            )
+    else:
+        app()
+
 if __name__ == "__main__":
-    app()
+    main()

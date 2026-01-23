@@ -18,6 +18,23 @@ from torch.utils.data import DataLoader, Dataset
 
 from src.models.rnn import PriceGRU, PriceLSTM, get_default_callbacks
 
+# --- Sweep entry points for CLI ---
+def run_lstm_sweep():
+    """
+    Launch a wandb sweep for LSTM using lstm_sweep.yaml config.
+    """
+    sweep_config = os.path.join(os.path.dirname(__file__), "lstm_sweep.yaml")
+    print(f"Launching wandb sweep with config: {sweep_config}")
+    subprocess.run([sys.executable, "-m", "wandb", "sweep", sweep_config])
+
+def run_gru_sweep():
+    """
+    Launch a wandb sweep for GRU using gru_sweep.yaml config.
+    """
+    sweep_config = os.path.join(os.path.dirname(__file__), "gru_sweep.yaml")
+    print(f"Launching wandb sweep with config: {sweep_config}")
+    subprocess.run([sys.executable, "-m", "wandb", "sweep", sweep_config])
+
 
 # Utility to load model from checkpoint
 def load_model(model_class, checkpoint_path):

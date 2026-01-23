@@ -80,6 +80,23 @@ Project Organization
    make data
    ```
 
+**Note, this repository is made, and we recommend using UV, if already installed, just;**
+   ```bash
+   uv sync
+   ```
+
+in which additional commands to download the data can be run such as;
+
+   ```bash
+   uv run make_data
+   uv run rnn_data
+   uv run train_rnn
+   ```
+
+**Additional note**
+
+As we tested base functions, we found out the online download of the data from Zenodo can be disrupted if the service is offline, or if the network is 'flagged as suspicious connection'. Therefore the raw data has been supplied for this project.
+
 ## Workflows
 
 ### Local Workflow

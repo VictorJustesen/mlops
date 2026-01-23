@@ -184,7 +184,7 @@ To guarantee everyone were working with as identical as possible coding environm
 >
 > Answer:
 
-Our cookiecutter template has a few changes from the primary cookiecutter template, namely that the SRC contains purely the machine learning model itself. While we might tap back into the model, it is the only major deviation.
+Our cookiecutter template has a few changes from the primary cookiecutter template, namely that the SRC contains purely the machine learning model itself. While we might tap back into the model, it is the only major deviation. We have filled out most folders, yet have some files lying in the main repository. In that regard we have discussed but not concluded on ways to keep a repository neat and clean.
 
 ### Question 6
 
@@ -317,7 +317,7 @@ We have made use of both hydra config files, which allows us to maintain a 'stan
 >
 > Answer:
 
-We primarily utilized config files, which means a lot of standard hyperparameters are kept the same, unless the standard hyperparameters are overwritten. Additionally the hydraconfig files will generate a log file locally, so the user can figure out exactly what configurations were utilized at what date. Additionally a standard seed is set in the config file, to keep number generation identical. Utilizing pytorchlightning the specific hyperparameters are saved in the checkpoint which is saved in the models/ folder.
+We ensured reproducibility by utilizing the Hydra config files to manage the experiment hyperparameters and settings, each experiment run is fully defined by config file, whih gets logged locally (and to wandb) for tracking. Users can reproduce any experiment by utilizing an identical config file, and/or command-line overrides. Additionally we set a standard seed in the config. Furthermore pytorch Lightning is used in the training, which saves model checkpoints, including all hyperparameters, which in addition to wandb tracking, that logs configs, metrics and artifacts, can be recreated either utilizing logs, checkpoints or config files.
 
 ### Question 14
 
@@ -371,7 +371,8 @@ To run locally: "make train-local" for training or "make deploy-local" for the A
 >
 > Answer:
 
---- question 16 fill here ---
+For debugging each user had their own methodology for solving the bugs at hand, ranging from the debugging tool to utilizing gitcopilot, however we mostly relied on documentation and copilot.
+And, we have tried profiling our code, and have even left the pytorch lightning profiling as an option in the training loop. Our code is not perfect - And as a matter of fact, one of our major issues was the data shuffling - For that reason it could be discussed to save the shuffled data, as unless the data is updated (and hence the resulting save should be updated) they're identical, casing no loss of information, but reducing computation between instances. Besides that the training loop takes up the majority of the time - Which can of course always be improved on. 
 
 ## Working in the cloud
 

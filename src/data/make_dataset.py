@@ -9,6 +9,7 @@ def download_data(dataset_name, output_path):
     print("starting")
     url = f"https://zenodo.org/record/4624805/files/{dataset_name}.csv?download=1"
     content = requests.get(url).content
+    print(content.decode("utf-8"))
     df = pd.read_csv(io.StringIO(content.decode("utf-8")), index_col=0, parse_dates=True)
 
     os.makedirs(output_path, exist_ok=True)

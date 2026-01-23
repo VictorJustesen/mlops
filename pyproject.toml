@@ -68,6 +68,12 @@ members = [
 make_data = "src.data.make_dataset:main"
 train_rnn = "src.models.train_rnn:app"
 rnn_data = "src.features.rnn_data:main"
+data_drift = "src.monitor_drift:main"
+
+# Wandb sweep scripts for LSTM and GRU
+sweep_lstm = "src.models.train_rnn:run_lstm_sweep"
+sweep_gru = "src.models.train_rnn:run_gru_sweep"
+
 
 
 [tool.uv]

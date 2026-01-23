@@ -220,6 +220,15 @@ def grouped_time_split_save(input_dir=RAW_DATA_PATH, output_dir=GROUPED_DATA_PAT
             )
 
 
-if __name__ == "__main__":
+
+# Add a main function for CLI entry point
+def main():
+    """
+    Run both time_series_split_save and grouped_time_split_save for CLI usage.
+    """
     time_series_split_save()
     grouped_time_split_save()
+
+
+if __name__ == "__main__":
+    main()
