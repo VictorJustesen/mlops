@@ -3,7 +3,7 @@ import random
 import subprocess
 import sys
 from datetime import datetime
-from typing import Type, Union
+from typing import Any, Type, Union
 
 import hydra
 import numpy as np
@@ -196,6 +196,7 @@ def train(cfg: DictConfig):
     print("Setting up PyTorch Lightning Trainer...")
     callbacks = get_default_callbacks()
     profiler_type = getattr(cfg, "profiler_type", "simple")
+    logger: Any
     try:
         logger = pl.loggers.WandbLogger(
             project="mlops", name=f"{cfg.model_type}_{cfg.regions}_rnn", reinit=True
@@ -204,7 +205,7 @@ def train(cfg: DictConfig):
         print(f"Warning: Failed to initialize WandB logger. Proceeding without it. Error: {e}")
         logger = True  # Fallback to default logger
 
-    profiler = None
+    profiler: Any = None
     if profiler_type == "advanced":
         profiler = AdvancedProfiler()
     elif profiler_type == "simple":
