@@ -2,13 +2,15 @@ import glob
 import os
 import sys
 from contextlib import asynccontextmanager
+from datetime import datetime
+from typing import Any, Dict, Union
 
+import pandas as pd
 import torch
 import yaml
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
-import pandas as pd
-from datetime import datetime
+from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseModel
 
 sys.path.append(os.getcwd())
@@ -27,7 +29,6 @@ DEVICE = torch.device(
     "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 )
 
-from typing import Union, Dict, Any
 
 model: Union[PriceLSTM, PriceGRU, None] = None
 model_info: Dict[str, Any] = {}
@@ -171,6 +172,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+Instrumentator().instrument(app).expose(app)
+
 
 class PredictionInput(BaseModel):
     # Expects list of [Price, Load, Production]
@@ -196,7 +199,7 @@ def predict(input_data: PredictionInput, background_tasks: BackgroundTasks):
 
         with torch.no_grad():
             prediction = model(data)
-        
+
         pred_val = prediction.item()
 
         # Add background task to save data without blocking response
@@ -212,53 +215,51 @@ def monitoring():
     """Simple endpoint to return Evidently drift report"""
     try:
         # Use legacy as per your monitor_drift.py
-        from evidently.legacy.report import Report
         from evidently.legacy.metric_preset import DataDriftPreset
+        from evidently.legacy.report import Report
 
         log_file = "prediction_log.csv"
         if not os.path.exists(log_file):
             return "<h1>No data logged yet</h1>"
-            
+
         # Load current data
         current_data = pd.read_csv(log_file)
-        
-        # For this simple implementation, we compare the first half of logged data 
+
+        # For this simple implementation, we compare the first half of logged data
         # against the second half if we don't have a static reference loaded.
         # Ideally, you load your training data reference here.
         if len(current_data) < 10:
             return "<h1>Not enough data for report</h1>"
-            
+
         mid = len(current_data) // 2
         ref = current_data.iloc[:mid]
         cur = current_data.iloc[mid:]
-        
+
         report = Report(metrics=[DataDriftPreset()])
         report.run(reference_data=ref, current_data=cur)
-        
+
         # Return HTML report directly
         return report.get_html()
-        
+
     except Exception as e:
         return f"<h1>Error generating report: {e}</h1>"
+
 
 def save_prediction_log(features: list[list[float]], prediction: float):
     """Log predictions to a local CSV file (Background Task)"""
     # Flatten features because Evidently expects tabular data
     # (seq_len * n_features) columns
     flat_features = [item for sublist in features for item in sublist]
-    
-    row = {
-        "timestamp": datetime.now().isoformat(),
-        "prediction": prediction
-    }
+
+    row = {"timestamp": datetime.now().isoformat(), "prediction": prediction}
     # Add feature columns f0, f1...
     for i, f in enumerate(flat_features):
         row[f"f{i}"] = f
-        
+
     df = pd.DataFrame([row])
-    
+
     # Append to file (Note: In Cloud Run, this file is ephemeral and lost on restart)
     # For production, you would upload this to GCS or BigQuery
     file_path = "prediction_log.csv"
     hdr = not os.path.exists(file_path)
-    df.to_csv(file_path, mode='a', header=hdr, index=False)
+    df.to_csv(file_path, mode="a", header=hdr, index=False)
