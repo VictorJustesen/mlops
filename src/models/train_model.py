@@ -26,7 +26,12 @@ def train_and_evaluate(dataset_name):
         xgb_config = yaml.safe_load(f)
 
     # Initialize wandb run
-    wandb.init(project="mlops", name=f"{dataset_name}_xgb", reinit=True)
+    try:
+        wandb.init(project="mlops", name=f"{dataset_name}_xgb", reinit=True)
+    except Exception as e:
+        print(f"Warning: WandB failed to initialize ({e}). Falling back to offline mode.")
+        wandb.init(project="mlops", name=f"{dataset_name}_xgb", reinit=True, mode="offline")
+
     wandb.config.update(xgb_config)
     wandb.config.update({"dataset": dataset_name})
 
