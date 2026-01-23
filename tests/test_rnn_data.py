@@ -31,7 +31,7 @@ def sample_csv(temp_data_dirs):
     input_dir, _ = temp_data_dirs
 
     # Create a simple test dataset
-    dates = pd.date_range("2024-01-01", periods=10, freq="H")
+    dates = pd.date_range("2024-01-01", periods=10, freq="h")
     data = {
         "Date": dates,
         "Prices": [50, 55, 60, 65, 70, 75, 80, 85, 90, 95],

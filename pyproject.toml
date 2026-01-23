@@ -40,7 +40,8 @@ dependencies = [
     "types-requests>=2.32.4.20260107",
     "types-pyyaml>=6.0.12.20250915",
     "tensorboard>=2.20.0",
-    "tensorboard-plugin-profile>=2.20.9",
+    "tensorboard-plugin-profile>=2.20.9; sys_platform != 'linux' or platform_machine != 'aarch64'",
+    "prometheus-fastapi-instrumentator>=7.0.0",
 ]
 
 
