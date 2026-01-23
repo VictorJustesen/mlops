@@ -220,7 +220,6 @@ def grouped_time_split_save(input_dir=RAW_DATA_PATH, output_dir=GROUPED_DATA_PAT
             )
 
 
-
 # Add a main function for CLI entry point
 def main():
     """

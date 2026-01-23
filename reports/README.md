@@ -372,7 +372,7 @@ To run locally: "make train-local" for training or "make deploy-local" for the A
 > Answer:
 
 For debugging each user had their own methodology for solving the bugs at hand, ranging from the debugging tool to utilizing gitcopilot, however we mostly relied on documentation and copilot.
-And, we have tried profiling our code, and have even left the pytorch lightning profiling as an option in the training loop. Our code is not perfect - And as a matter of fact, one of our major issues was the data shuffling - For that reason it could be discussed to save the shuffled data, as unless the data is updated (and hence the resulting save should be updated) they're identical, casing no loss of information, but reducing computation between instances. Besides that the training loop takes up the majority of the time - Which can of course always be improved on. 
+And, we have tried profiling our code, and have even left the pytorch lightning profiling as an option in the training loop. Our code is not perfect - And as a matter of fact, one of our major issues was the data shuffling - For that reason it could be discussed to save the shuffled data, as unless the data is updated (and hence the resulting save should be updated) they're identical, casing no loss of information, but reducing computation between instances. Besides that the training loop takes up the majority of the time - Which can of course always be improved on.
 
 ## Working in the cloud
 
