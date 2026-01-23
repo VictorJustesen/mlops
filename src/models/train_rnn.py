@@ -18,6 +18,7 @@ from torch.utils.data import DataLoader, Dataset
 
 from src.models.rnn import PriceGRU, PriceLSTM, get_default_callbacks
 
+
 # --- Sweep entry points for CLI ---
 def run_lstm_sweep():
     """
@@ -26,6 +27,7 @@ def run_lstm_sweep():
     sweep_config = os.path.join(os.path.dirname(__file__), "lstm_sweep.yaml")
     print(f"Launching wandb sweep with config: {sweep_config}")
     subprocess.run([sys.executable, "-m", "wandb", "sweep", sweep_config])
+
 
 def run_gru_sweep():
     """
@@ -358,7 +360,9 @@ def main(
     if checkpoint_path is not None:
         overrides.append(f"checkpoint_path={checkpoint_path}")
     if profiler_type is not None:
-        overrides.append(f"profiler_type={profiler_type}") # simple or advanced, provides in terminal profile from training loop
+        overrides.append(
+            f"profiler_type={profiler_type}"
+        )  # simple or advanced, provides in terminal profile from training loop
     sys.argv = [sys.argv[0]] + overrides
     train()
 
