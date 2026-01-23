@@ -9,10 +9,14 @@ import numpy as np
 import pandas as pd
 import pytorch_lightning as pl
 import torch
+ 
 import typer
 import wandb
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, Dataset
+
+from pytorch_lightning.profilers import SimpleProfiler, AdvancedProfiler, PyTorchProfiler
+from pytorch_lightning.loggers import TensorBoardLogger
 
 from src.models.rnn import PriceGRU, PriceLSTM, get_default_callbacks
 from typing import Type, Union
@@ -25,6 +29,7 @@ def load_model(model_class, checkpoint_path):
 DEFAULT_SEED = 6
 
 sys.path.append(os.getcwd())
+
 
 app = typer.Typer(add_completion=False, invoke_without_command=True)
 
@@ -183,13 +188,22 @@ def train(cfg: DictConfig):
 
     print("Setting up PyTorch Lightning Trainer...")
     callbacks = get_default_callbacks()
+    profiler_type = getattr(cfg, 'profiler_type', 'simple')
+    logger = pl.loggers.WandbLogger(
+        project="mlops", name=f"{cfg.model_type}_{cfg.regions}_rnn", reinit=True
+    )
+    profiler = None
+    if profiler_type == 'advanced':
+        profiler = AdvancedProfiler()
+    elif profiler_type == 'simple':
+        profiler = SimpleProfiler()
+    # If profiler_type is 'none', profiler remains None
     trainer = pl.Trainer(
         max_epochs=cfg.epochs,
         accelerator="gpu" if torch.cuda.is_available() else "cpu",
         callbacks=callbacks,
-        logger=pl.loggers.WandbLogger(
-            project="mlops", name=f"{cfg.model_type}_{cfg.regions}_rnn", reinit=True
-        ),
+        logger=logger,
+        profiler=profiler,
     )
 
     print("Starting model training...")
@@ -247,6 +261,9 @@ def main(
         ),
     ),
     sweep: bool = typer.Option(False, "--sweep", help="Run a simple hyperparameter sweep"),
+    profiler_type: str = typer.Option(
+        "simple", "--profiler-type", help="Profiler type: 'simple', 'advanced', 'pytorch', or 'none'"
+    ),
 ):
     """Default command: runs train(). Allows Hydra config overrides via CLI options."""
 
@@ -289,6 +306,8 @@ def main(
         overrides.append(f"epochs={epochs}")
     if checkpoint_path is not None:
         overrides.append(f"checkpoint_path={checkpoint_path}")
+    if profiler_type is not None:
+        overrides.append(f"profiler_type={profiler_type}")
     sys.argv = [sys.argv[0]] + overrides
     train()
 

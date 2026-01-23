@@ -14,3 +14,4 @@ num_layers: 2              # Number of RNN layers
 dropout: 0.1               # Dropout rate for RNN layers
 data_path: "data/grouped"  # Path to data directory (can be /gcs/bucket/path)
 seed: 6                    # Random seed for reproducibility
+profiler_type: "advanced"    # Profiler type: 'simple', 'advanced', or 'none'

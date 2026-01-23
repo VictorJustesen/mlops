@@ -102,33 +102,8 @@ wandb/
 mlops/
 
 # models
-model_gru_FR.pth
-model_lstm_FR.pth
-model_gru_DE.pth
-model_lstm_DE.pth
-model_gru_BE.pth
-model_lstm_BE.pth
-model_gru_NP.pth
-model_lstm_NP.pth
-model_gru_PJM.pth
-model_lstm_PJM.pth
-training_statistics_gru_FR.png
-training_statistics_lstm_FR.png
-training_statistics_gru_DE.png
-training_statistics_lstm_DE.png
-training_statistics_gru_BE.png
-training_statistics_lstm_BE.png
-training_statistics_gru_NP.png
-training_statistics_lstm_NP.png
-training_statistics_gru_PJM.png
-training_statistics_lstm_PJM.png
-model_gru_FR.ckpt
-model_lstm_FR.ckpt
-model_gru_DE.ckpt
-model_lstm_DE.ckpt
-model_gru_BE.ckpt
-model_lstm_BE.ckpt
-model_gru_NP.ckpt
-model_lstm_NP.ckpt
-model_gru_PJM.ckpt
-model_lstm_PJM.ckpt
+models/*
+!models/.gitkeep
+
+# TensorBoard logs
+tb_logs/

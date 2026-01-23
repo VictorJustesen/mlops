@@ -39,6 +39,8 @@ dependencies = [
     "pandas-stubs>=2.3.3.260113",
     "types-requests>=2.32.4.20260107",
     "types-pyyaml>=6.0.12.20250915",
+    "tensorboard>=2.20.0",
+    "tensorboard-plugin-profile>=2.20.9",
 ]
 
 
