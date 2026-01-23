@@ -521,7 +521,7 @@ For load testing, we utilized Locust to simulate concurrent user traffic against
 
 We implemented monitoring for our deployed API using a combination of GCP's native tools and custom instrumentation. Cloud Run automatically provides monitoring dashboards that track request counts, response times, and resource usage. We also set up email alerts in GCP to notify us of 5xx errors.
 
-Additionally, we instrumented our FastAPI application using `prometheus-fastapi-instrumentator`, exposing a `/metrics` endpoint that provides detailed system metrics scrapeable by Prometheus. For model performance monitoring, we implemented a `/monitoring` endpoint using Evidently AI to generate data drift reports. This assumes we save apit (which we do). This allows us to detect if the input data distribution is shifting (drift). 
+Additionally, we instrumented our FastAPI application using `prometheus-fastapi-instrumentator`, exposing a `/metrics` endpoint that provides detailed system metrics scrapeable by Prometheus. For model performance monitoring, we implemented a `/monitoring` endpoint using Evidently AI to generate data drift reports. This assumes we save apit (which we do). This allows us to detect if the input data distribution is shifting (drift).
 
 ## Overall discussion of project
 
